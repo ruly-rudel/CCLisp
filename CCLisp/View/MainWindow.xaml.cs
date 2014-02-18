@@ -37,18 +37,29 @@ namespace CCLisp.View
             EvalResult.Text = "";
             using (var sr = new StringReader(EvalText.Text))
             {
-                var obj = interp.Read(sr);
-                foreach (var i in obj)
+                IEnumerable<CCObject> obj;
+                try
                 {
-                    var eobj = interp.Eval(i);
-                    if (eobj != null)
+                    obj = interp.Read(sr);
+
+                    foreach (var i in obj)
                     {
-                        EvalResult.Text += eobj.ToString();
+                        interp.Eval(i);
+                        var eobj = interp.GetResult();
+                        if (eobj != null)
+                        {
+                            EvalResult.Text += eobj.ToString();
+                        }
+                        else
+                        {
+                            EvalResult.Text += "()\n";
+                        }
                     }
-                    else
-                    {
-                        EvalResult.Text += "()\n";
-                    }
+
+                }
+                catch(CCException ex)
+                {
+                    EvalResult.Text += ex.Message;
                 }
             }
 

@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text;
-using System.Threading.Tasks;
 
 namespace CCLisp.Model
 {
@@ -13,21 +12,264 @@ namespace CCLisp.Model
 
         private string SpecialChar = "()";
 
+        // single oblects (must make it singleton?
         private CCParenL ParenL = new CCParenL();
         private CCParenR ParenR = new CCParenR();
+        private CCNil    Nil    = new CCNil();
 
+        // simbol dictionary
         private Dictionary<string, CCSymbol> Symbols = new Dictionary<string, CCSymbol>();
+
+        // evaluation environments
+        private CCObject stack;
+        private CCObject Stack
+        {
+            get
+            {
+                if (stack.GetType() == typeof(CCNil))
+                {
+                    return Nil;
+                }
+                else
+                {
+                    var top = stack as CCCons;
+                    stack = top.cdr;
+                    return top.car;
+                }
+            }
+
+            set
+            {
+                var top = new CCCons();
+                top.car = value;
+                top.cdr = stack;
+                stack = top;
+            }
+        }
+
+        private CCObject env;
+        private CCObject Env
+        {
+            get
+            {
+                return env;
+            }
+
+            set
+            {
+                env = value;
+            }
+        }
+
+        private CCObject code;
+        private CCObject Code
+        {
+            get
+            {
+                if (code.GetType() == typeof(CCNil))
+                {
+                    return Nil;
+                }
+                else if(code.GetType() == typeof(CCCons))
+                {
+                    var top = code as CCCons;
+                    code = top.cdr;
+                    return top.car;
+                }
+                else
+                {
+                    var top = code;
+                    code = Nil;
+                    return top;
+                }
+            }
+
+            set
+            {
+                var top = new CCCons();
+                top.car = value;
+                top.cdr = code;
+                code = top;
+            }            
+        }
+
+        private CCObject dump;
+        private CCObject Dump
+        {
+            get
+            {
+                if (dump.GetType() == typeof(CCNil))
+                {
+                    return Nil;
+                }
+                else
+                {
+                    var top = dump as CCCons;
+                    dump = top.cdr;
+                    return top.car;
+                }
+            }
+
+            set
+            {
+                var top = new CCCons();
+                top.car = value;
+                top.cdr = dump;
+                dump = top;
+            }
+        }
+
+        public CCInterpreter()
+        {
+            stack = Nil;
+            env = Nil;
+            code = Nil;
+            dump = Nil;
+        }
 
         public IEnumerable<CCObject> Read(StringReader sr)
         {
             return Parse(Scan(sr));
         }
 
-        public CCObject Eval(CCObject obj)
+        public void Eval(CCObject obj)
         {
-            return obj;
+            if (obj.GetType() == typeof(CCInt))
+            {
+                Stack = obj;
+            }
+            else if(obj.GetType() == typeof(CCSymbol))
+            {
+                var sym = obj as CCSymbol;
+                if (sym.Value != null)
+                {
+                    Stack = sym;
+                }
+                else
+                {
+                    throw new CCRuntimeSymbolValueIsNotBoundException(stack, env, code, dump);
+                }
+            }
+            else if(obj.GetType() == typeof(CCCons))
+            {
+                SetEvalTop(obj as CCCons);
+                while(EvalTop() != null)
+                    ;
+            }
+            else if(obj.GetType() == typeof(CCNil))
+            {
+                Stack = Nil;
+            }
+            else
+            {
+                throw new NotImplementedException();
+            }
         }
 
+        private void SetEvalTop(CCCons obj)
+        {
+            // push apply function
+            var ap = new CCCons();
+            ap.car = new CCISAP();
+            ap.cdr = (obj as CCCons).car;
+            Code = ap;
+
+            CCObject p = obj.cdr;
+            while(p.GetType() != typeof(CCNil))
+            {
+                var pp = p as CCCons;
+                Code = pp.car;
+                p = pp.cdr;
+            }
+        }
+
+        private CCObject EvalTop()
+        {
+            var obj = Code;
+
+            if (obj.GetType() == typeof(CCCons) && (obj as CCCons).car.GetType() == typeof(CCISAP))
+            {
+                var sym = (obj as CCCons).cdr as CCSymbol;
+                CCInt a, b, r;
+                switch (sym.Name)
+                {
+                    case "+":
+                        a = Stack as CCInt;
+                        b = Stack as CCInt;
+
+                        r = new CCInt();
+                        r.value = a.value + b.value;
+                        Stack = r;
+                        return r;
+
+                    default:
+                        throw new NotImplementedException();
+                }
+            }
+            else if(obj.GetType() == typeof(CCNil))
+            {
+                return null;
+            }
+            else
+            {
+                // DUM
+                Dump = code;
+                Dump = env;
+                Dump = stack;
+
+                // setup
+                stack = Nil;
+                code = Nil;
+
+                // eval
+                Eval(obj);
+
+                // RET
+                var s1 = Stack;
+                stack = Dump;
+                env = Dump;
+                code = Dump;
+                Stack = s1;
+
+                return s1;
+            }
+        }
+
+        public CCObject GetResult()
+        {
+            return Stack;
+        }
+
+        //
+        // evaluator
+        //
+        //private CCObject EvalCons(CCCons obj)
+        //{
+        //    // check special forms
+        //    if(obj.car.GetType() == typeof(CCSymbol))
+        //    {
+        //        var car = obj.car as CCSymbol;
+        //        switch (car.Name)
+        //        {
+        //            case "+":
+        //                break;
+
+        //            default:    // apply
+        //                throw new NotImplementedException();
+        //        }
+        //    }
+        //}
+
+        private CCObject Apply(CCObject obj)
+        {
+            return Nil;
+        }
+
+
+
+        //
+        // parser
+        //
         private IEnumerable<CCObject> Parse(IEnumerator<CCObject> ts)
         {
             while (ts.MoveNext())
@@ -50,15 +292,19 @@ namespace CCLisp.Model
 
         private CCObject ParseList(IEnumerator<CCObject> ts)
         {
-            ts.MoveNext();  // to car
+            if (!ts.MoveNext()) // to car
+            {
+                // no car exists
+                throw new CCParserException();
+            }
             return ParseListContinue(ts);
         }
 
         private CCObject ParseListContinue(IEnumerator<CCObject> ts)
         {
-            if (ts.Current == ParenR) // null list
+            if (ts.Current == ParenR) // end of list
             {
-                return null;
+                return Nil;
             }
 
             var list = new CCCons();
@@ -71,7 +317,11 @@ namespace CCLisp.Model
                 list.car = ts.Current;
             }
 
-            ts.MoveNext();  // to cdr
+            if(!ts.MoveNext()) // to cdr
+            {
+                // no cdr exists
+                throw new CCParserException();
+            }
             list.cdr = ParseListContinue(ts);
 
             return list;
