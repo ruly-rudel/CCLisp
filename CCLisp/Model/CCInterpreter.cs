@@ -121,10 +121,17 @@ namespace CCLisp.Model
 
         public CCInterpreter()
         {
+            // clear environment
             stack = Nil;
             env = Nil;
             code = Nil;
             dump = Nil;
+
+            // make special simbol t
+            var t = new CCSymbol();
+            t.Name = "t";
+            t.Value = t;
+            Symbols["t"] = t;
         }
 
         public IEnumerable<CCObject> Read(StringReader sr)
@@ -432,7 +439,14 @@ namespace CCLisp.Model
             }
             else
             {
-                return GetSymbol(sb.ToString());
+                if (sb.ToString() == "nil")
+                {
+                    return Nil;
+                }
+                else
+                {
+                    return GetSymbol(sb.ToString());
+                }
             }
         }
     }
