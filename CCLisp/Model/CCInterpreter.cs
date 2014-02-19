@@ -160,7 +160,7 @@ namespace CCLisp.Model
             else if(obj.GetType() == typeof(CCCons))
             {
                 SetEvalTop(obj as CCCons);
-                while(EvalTop() != null)
+                while(EvalTop().GetType() != typeof(CCISHALT))
                     ;
             }
             else if(obj.GetType() == typeof(CCNil))
@@ -175,6 +175,32 @@ namespace CCLisp.Model
 
         private void SetEvalTop(CCCons obj)
         {
+            if(obj.car.GetType() == typeof(CCSymbol))
+            {
+                Code = new CCISHALT();
+                var car = obj.car as CCSymbol;
+
+                // special forms
+                switch(car.Name)
+                {
+                    case "if":
+                        SetEvalTopWithIf(obj);
+                        break;
+
+                    default:    // assume normal function application;
+                        SetEvalTopWithApply(obj);
+                        break;
+                }
+                
+            }
+            else
+            {
+                SetEvalTopWithApply(obj);
+            }
+        }
+
+        private void SetEvalTopWithApply(CCCons obj)
+        {
             // push apply function
             var ap = new CCCons();
             ap.car = new CCISAP();
@@ -182,7 +208,7 @@ namespace CCLisp.Model
             Code = ap;
 
             CCObject p = obj.cdr;
-            while(p.GetType() != typeof(CCNil))
+            while (p.GetType() != typeof(CCNil))
             {
                 var pp = p as CCCons;
                 Code = pp.car;
@@ -190,14 +216,44 @@ namespace CCLisp.Model
             }
         }
 
+        private void SetEvalTopWithIf(CCCons obj)
+        {
+            CCCons c1 = obj.cdr as CCCons;
+            CCCons c2 = c1.cdr as CCCons;
+            CCCons c3 = c2.cdr as CCCons;
+
+            CCObject cond = c1.car;
+            CCObject tbr = c2.car;
+            CCObject fbr = c3.car;
+
+
+            // push if function
+            var iffn = new CCCons();
+            iffn.car = new CCISIF();
+
+            var br = new CCCons();
+            br.car = tbr;
+            br.cdr = fbr;
+            iffn.cdr = br;
+            Code = iffn;
+
+            Code = cond;
+        }
+
         private CCObject EvalTop()
         {
             var obj = Code;
 
-            if (obj.GetType() == typeof(CCCons) && (obj as CCCons).car.GetType() == typeof(CCISAP))
+            if(obj.GetType() == typeof(CCISHALT))
+            {
+                return obj;
+            }
+            else if (obj.GetType() == typeof(CCCons) && (obj as CCCons).car.GetType() == typeof(CCISAP))
             {
                 var sym = (obj as CCCons).cdr as CCSymbol;
                 CCInt a, b, r;
+
+                // bulitin functions
                 switch (sym.Name)
                 {
                     case "+":
@@ -209,13 +265,28 @@ namespace CCLisp.Model
                         Stack = r;
                         return r;
 
-                    default:
+                    default: // normal apply
                         throw new NotImplementedException();
                 }
             }
+            else if(obj.GetType() == typeof(CCCons) && (obj as CCCons).car.GetType() == typeof(CCISIF))
+            {
+                var br = (obj as CCCons).cdr as CCCons;
+                var cond = Stack;
+                if (cond.GetType() == typeof(CCNil))
+                {
+                    Eval(br.cdr);
+                }
+                else
+                {
+                    Eval(br.car);
+                }
+                return cond;    // must be fixed;
+            }
             else if(obj.GetType() == typeof(CCNil))
             {
-                return null;
+                Stack = Nil;
+                return Nil;
             }
             else
             {

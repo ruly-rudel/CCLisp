@@ -68,4 +68,21 @@ namespace CCLisp.Model
             return "[IS:AP]";
         }
     }
+
+    public class CCISIF : CCObject
+    {
+        public override string ToString()
+        {
+            return "[IS:IF]";
+        }
+    }
+
+    public class CCISHALT : CCObject
+    {
+        public override string ToString()
+        {
+            return "[IS:HALT]";
+        }
+    }
+
 }
