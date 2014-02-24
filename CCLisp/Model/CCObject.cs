@@ -26,6 +26,28 @@ namespace CCLisp.Model
         }
     }
 
+    public class CCIdentifier : CCObject
+    {
+        public string Name { get; set; }
+
+        public override string ToString()
+        {
+            return Name;
+        }
+
+        public override bool Equals(object obj)
+        {
+            if (obj.GetType() == typeof(CCIdentifier))
+            {
+                return (obj as CCIdentifier).Name.Equals(Name);
+            }
+            else
+            {
+                return false;
+            }
+        }
+    }
+
     public class CCSymbol : CCObject
     {
         public string Name { get; set; }

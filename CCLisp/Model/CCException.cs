@@ -32,6 +32,11 @@ namespace CCLisp.Model
         public CCRuntimeSymbolValueIsNotBoundException(CCObject stack, CCObject env, CCObject code, CCObject dump) : base(stack, env, code, dump) { }
     }
 
+    public class CCRuntimeSymbolIsNotFoundException : CCRuntimeException
+    {
+        public CCRuntimeSymbolIsNotFoundException(CCObject stack, CCObject env, CCObject code, CCObject dump) : base(stack, env, code, dump) { }
+    }
+
     public class CCParserException : CCException
     {
     }

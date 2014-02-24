@@ -141,11 +141,11 @@ namespace CCLisp.Model
 
         public void Eval(CCObject obj)
         {
-            if (obj.GetType() == typeof(CCInt))
+            if (obj.GetType() == typeof(CCInt)) // number
             {
                 Stack = obj;
             }
-            else if(obj.GetType() == typeof(CCSymbol))
+            else if(obj.GetType() == typeof(CCSymbol))  // symbol
             {
                 var sym = obj as CCSymbol;
                 if (sym.Value != null)
@@ -157,13 +157,34 @@ namespace CCLisp.Model
                     throw new CCRuntimeSymbolValueIsNotBoundException(stack, env, code, dump);
                 }
             }
-            else if(obj.GetType() == typeof(CCCons))
+            else if (obj.GetType() == typeof(CCIdentifier)) // execute binding
+            {
+                var id = obj as CCIdentifier;
+                if(Symbols.ContainsKey(id.Name))
+                {
+                    var sym = Symbols[id.Name];
+                    if (sym.Value != null)
+                    {
+                        Stack = sym;
+                    }
+                    else
+                    {
+                        throw new CCRuntimeSymbolValueIsNotBoundException(stack, env, code, dump);
+                    }
+                }
+                else
+                {
+                    throw new CCRuntimeSymbolIsNotFoundException(stack, env, code, dump);
+                }
+
+            }
+            else if (obj.GetType() == typeof(CCCons))   // execute apply
             {
                 SetEvalTop(obj as CCCons);
-                while(EvalTop().GetType() != typeof(CCISHALT))
+                while (EvalTop().GetType() != typeof(CCISHALT))
                     ;
             }
-            else if(obj.GetType() == typeof(CCNil))
+            else if (obj.GetType() == typeof(CCNil))    // nil
             {
                 Stack = Nil;
             }
@@ -175,10 +196,10 @@ namespace CCLisp.Model
 
         private void SetEvalTop(CCCons obj)
         {
-            if(obj.car.GetType() == typeof(CCSymbol))
+            if(obj.car.GetType() == typeof(CCIdentifier))
             {
                 Code = new CCISHALT();
-                var car = obj.car as CCSymbol;
+                var car = obj.car as CCIdentifier;
 
                 // special forms
                 switch(car.Name)
@@ -250,7 +271,7 @@ namespace CCLisp.Model
             }
             else if (obj.GetType() == typeof(CCCons) && (obj as CCCons).car.GetType() == typeof(CCISAP))
             {
-                var sym = (obj as CCCons).cdr as CCSymbol;
+                var sym = (obj as CCCons).cdr as CCIdentifier;
                 CCInt a, b, r;
 
                 // bulitin functions
@@ -516,7 +537,11 @@ namespace CCLisp.Model
                 }
                 else
                 {
-                    return GetSymbol(sb.ToString());
+                    //return GetSymbol(sb.ToString());
+                    return new CCIdentifier()
+                    {
+                        Name = sb.ToString()
+                    };
                 }
             }
         }
