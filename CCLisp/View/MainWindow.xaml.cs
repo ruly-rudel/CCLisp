@@ -44,16 +44,17 @@ namespace CCLisp.View
 
                     foreach (var i in obj)
                     {
-                        interp.Eval(i);
-                        var eobj = interp.GetResult();
-                        if (eobj != null)
-                        {
-                            EvalResult.Text += eobj.ToString();
-                        }
-                        else
-                        {
-                            EvalResult.Text += "()\n";
-                        }
+                        var c = interp.Compile(i);
+                        EvalResult.Text += c.ToString() + "\n";
+                        //var eobj = interp.GetResult();
+                        //if (eobj != null)
+                        //{
+                        //    EvalResult.Text += eobj.ToString();
+                        //}
+                        //else
+                        //{
+                        //    EvalResult.Text += "()\n";
+                        //}
                     }
 
                 }

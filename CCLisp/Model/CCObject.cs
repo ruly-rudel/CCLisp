@@ -9,10 +9,54 @@ namespace CCLisp.Model
     {
         public CCObject car { get; set; }
         public CCObject cdr { get; set; }
+        public CCObject cadr
+        {
+            get
+            {
+                return (cdr as CCCons).car;
+            }
+        }
+        public CCObject caddr
+        {
+            get
+            {
+                return ((cdr as CCCons).cdr as CCCons).car;
+            }
+        }
+
+
+        public CCCons(CCObject a, CCObject d)
+        {
+            car = a;
+            cdr = d;
+        }
 
         public override string ToString()
         {
-            return "(" + car.ToString() + " " + cdr.ToString() + ")";
+            if(cdr.GetType() == typeof(CCCons))
+            {
+                return "(" + car.ToString() + " " + (cdr as CCCons).ToStringCont();
+            }
+            else
+            {
+                return "(" + car.ToString() + " . " + cdr.ToString() + ")";
+            }
+        }
+
+        public string ToStringCont()
+        {
+            if(cdr.GetType() == typeof(CCNil)) 
+            {
+                return car.ToString() + ")";
+            }
+            else if(cdr.GetType() == typeof(CCCons))
+            {
+                return car.ToString() + " " + (cdr as CCCons).ToStringCont();
+            }
+            else
+            {
+                return car.ToString() + " . " + cdr.ToString();
+            }
         }
     }
 
@@ -80,6 +124,21 @@ namespace CCLisp.Model
         public override string ToString()
         {
             return "nil";
+        }
+    }
+
+    public class CCIS : CCObject
+    {
+        public string Inst;
+
+        public CCIS(string inst)
+        {
+            Inst = inst;
+        }
+
+        public override string ToString()
+        {
+            return "[IS:" + Inst + "]";
         }
     }
 
