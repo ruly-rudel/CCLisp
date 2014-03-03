@@ -142,28 +142,28 @@ namespace CCLisp.Model
         }
     }
 
-    public class CCISAP : CCObject
-    {
-        public override string ToString()
-        {
-            return "[IS:AP]";
-        }
-    }
+    //public class CCISAP : CCObject
+    //{
+    //    public override string ToString()
+    //    {
+    //        return "[IS:AP]";
+    //    }
+    //}
 
-    public class CCISIF : CCObject
-    {
-        public override string ToString()
-        {
-            return "[IS:IF]";
-        }
-    }
+    //public class CCISIF : CCObject
+    //{
+    //    public override string ToString()
+    //    {
+    //        return "[IS:IF]";
+    //    }
+    //}
 
-    public class CCISHALT : CCObject
-    {
-        public override string ToString()
-        {
-            return "[IS:HALT]";
-        }
-    }
+    //public class CCISHALT : CCObject
+    //{
+    //    public override string ToString()
+    //    {
+    //        return "[IS:HALT]";
+    //    }
+    //}
 
 }

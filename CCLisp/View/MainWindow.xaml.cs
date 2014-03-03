@@ -46,6 +46,8 @@ namespace CCLisp.View
                     {
                         var c = interp.Compile(i);
                         EvalResult.Text += c.ToString() + "\n";
+                        interp.Eval(c);
+                        EvalResult.Text += interp.GetResult();
                         //var eobj = interp.GetResult();
                         //if (eobj != null)
                         //{
