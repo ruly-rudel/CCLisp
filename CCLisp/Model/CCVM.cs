@@ -6,15 +6,9 @@ using System.Text;
 
 namespace CCLisp.Model
 {
-    public class CCInterpreter
+    public class CCVM
     {
-        public string LogString = "";
-
-        private string SpecialChar = "()";
-
         // single oblects (must make it singleton?
-        private CCParenL ParenL = new CCParenL();
-        private CCParenR ParenR = new CCParenR();
         private CCNil    Nil    = new CCNil();
 
         private string[] Builtin = {"+", "-", "*", "/", "car", "cdr", "cons", "eq", "<", ">", "<=", ">="};
@@ -125,7 +119,7 @@ namespace CCLisp.Model
             }
         }
 
-        public CCInterpreter()
+        public CCVM()
         {
             // clear environment
             stack = Nil;
@@ -140,182 +134,7 @@ namespace CCLisp.Model
             Symbols["t"] = t;
         }
 
-        public IEnumerable<CCObject> Read(StringReader sr)
-        {
-            return Parse(Scan(sr));
-        }
 
-        public CCObject Compile(CCObject obj)
-        {
-            var cont = new CCCons(new CCIS("HALT"), Nil);
-
-            return Compile1(obj, Nil, cont);
-        }
-
-        private CCObject Compile1(CCObject exp, CCObject en, CCObject cont)
-        {
-            if(exp.GetType() != typeof(CCCons)) // nil, number or identifier
-            {
-                if (exp.GetType() == typeof(CCNil)) // nil
-                {
-                    return new CCCons(Nil, cont);
-                }
-                else
-                {
-                    var ij = Index(exp, en);
-                    if (ij == Nil) // number
-                    {
-                        return new CCCons(new CCIS("LDC"), new CCCons(exp, cont));
-                    }
-                    else // identifier
-                    {
-                        return new CCCons(new CCIS("LD"), new CCCons(ij, cont));
-                    }
-                }
-            }
-            else // apply
-            {
-                var expc = exp as CCCons;
-                var fcn = expc.car;
-                var args = expc.cdr;
-                if(fcn.GetType() != typeof(CCCons)) // apply function is a builtin, lambda or special form
-                {
-                    var fn = fcn as CCIdentifier;
-                    var name = from x in Builtin where x == fn.Name select x;
-                    if(name.Count() == 1)  // builtin
-                    {
-                        return CompileBuiltin(args, en, new CCCons(fcn, cont));
-                    }
-                    else if (fn.Name == "lambda") // lambda special form
-                    {
-                        var argsc = args as CCCons;
-                        return CompileLambda(argsc.cadr, new CCCons(argsc.car, en), cont);
-                    }
-                    else if (fn.Name == "if") // if special form
-                    {
-                        var argsc = args as CCCons;
-                        return CompileIf(argsc.car, argsc.cadr, argsc.caddr, en, cont);
-                    }
-                    else if(fn.Name == "let" || fn.Name == "letrec") // let or letrec
-                    {
-                        var argsc = args as CCCons;
-
-                        var newn = new CCCons(argsc.car, en);
-                        var values = argsc.cadr;
-                        var body = argsc.caddr;
-
-                        if(fn.Name == "let") // let
-                        {
-                            return new CCCons(Nil, CompileApp(values, en, CompileLambda(body, newn, new CCCons(new CCIS("AP"), cont))));
-                        }
-                        else // letrec
-                        {
-                            return new CCCons(new CCIS("DUM"), new CCCons(Nil, CompileApp(values, newn, CompileLambda(body, newn, new CCCons(new CCIS("RAP"), cont)))));
-                        }
-                    }
-                    else if (fn.Name == "quote")    // quote
-                    {
-                        return new CCCons(new CCIS("LDC"), new CCCons((args as CCCons).car, cont));
-                    }
-                    else
-                    {
-                        return new CCCons(Nil, CompileApp(args, en, new CCCons(new CCIS("LD"), new CCCons(Index(fcn, en), new CCCons(new CCIS("AP"), cont)))));
-                    }
-                }
-                else // application with nested function
-                {
-                    return new CCCons(Nil, CompileApp(args, en, Compile1(fcn, en, new CCCons(new CCIS("AP"), cont))));
-                }
-            }
-        }
-
-        private CCObject CompileBuiltin(CCObject args, CCObject en, CCObject cont)
-        {
-            if(args.GetType() == typeof(CCNil))
-            {
-                return cont;
-            }
-            else
-            {
-                return CompileBuiltin((args as CCCons).cdr, en, Compile1((args as CCCons).car, en, cont));
-            }
-        }
-
-        private CCObject CompileIf(CCObject test, CCObject t, CCObject f, CCObject en, CCObject cont)
-        {
-            return Compile1(test, en, new CCCons(
-                new CCIS("SEL"), new CCCons(
-                    Compile1(t, en, new CCCons(new CCIS("JOIN"), Nil)), new CCCons(
-                        Compile1(f, en, new CCCons(new CCIS("JOIN"), Nil)), cont))));
-        }
-
-        private CCObject CompileLambda(CCObject body, CCObject en, CCObject cont)
-        {
-            return new CCCons(
-                new CCIS("LDF"), new CCCons(
-                    Compile1(body, en, new CCCons(new CCIS("RTN"), Nil)),
-                    cont));
-        }
-
-        private CCObject CompileApp(CCObject args, CCObject en, CCObject cont)
-        {
-            if(args.GetType() == typeof(CCNil))
-            {
-                return cont;
-            }
-            else
-            {
-                return CompileApp((args as CCCons).cdr, en, Compile1((args as CCCons).car, en, new CCCons(new CCIS("CONS"), cont)));
-            }
-        }
-
-        private CCObject Index(CCObject exp, CCObject en)
-        {
-            return Index(exp, en, 1);
-        }
-
-        private CCObject Index(CCObject exp, CCObject en, int i)
-        {
-            if(en.GetType() == typeof(CCNil))
-            {
-                return Nil;
-            }
-            else
-            {
-                CCObject j = Index2(exp, (en as CCCons).car, 1);
-                if(j.GetType() == typeof(CCNil))
-                {
-                    return Index(exp, (en as CCCons).cdr, i + 1);
-                }
-                else
-                {
-                    return new CCCons(new CCInt() { value = i }, j);
-                }
-            }
-        }
-
-        private CCObject Index2(CCObject exp, CCObject en, int j)
-        {
-            if (en.GetType() == typeof(CCNil))
-            {
-                return Nil;
-            }
-            else
-            {
-                var e = en as CCCons;
-                if(e.car.ToString() == exp.ToString())
-                {
-                    return new CCInt()
-                    {
-                        value = j
-                    };
-                }
-                else
-                {
-                    return Index2(exp, e.cdr, j + 1);
-                }
-            }
-        }
 
         public void Eval(CCObject obj)
         {
@@ -326,6 +145,14 @@ namespace CCLisp.Model
             while (EvalTop()) ;
         }
 
+
+        public CCObject GetResult()
+        {
+            return Stack;
+        }
+
+
+        // private functions
         private bool EvalTop()
         {
             var obj = Code;
@@ -633,106 +460,6 @@ namespace CCLisp.Model
             }
         }
 
-        public CCObject GetResult()
-        {
-            return Stack;
-        }
-
-        //
-        // parser
-        //
-        private IEnumerable<CCObject> Parse(IEnumerator<CCObject> ts)
-        {
-            while (ts.MoveNext())
-            {
-                yield return ParseBasicForm(ts);
-            }
-        }
-
-        private CCObject ParseBasicForm(IEnumerator<CCObject> ts)
-        {
-            if (ts.Current == ParenL)
-            {
-                return ParseList(ts);
-            }
-            else
-            {
-                return ts.Current;
-            }
-        }
-
-        private CCObject ParseList(IEnumerator<CCObject> ts)
-        {
-            if (!ts.MoveNext()) // to car
-            {
-                // no car exists
-                throw new CCParserException();
-            }
-            return ParseListContinue(ts);
-        }
-
-        private CCObject ParseListContinue(IEnumerator<CCObject> ts)
-        {
-            if (ts.Current == ParenR) // end of list
-            {
-                return Nil;
-            }
-
-            var list = new CCCons(Nil, Nil);
-            if (ts.Current == ParenL)
-            {
-                list.car = ParseList(ts);
-            }
-            else
-            {
-                list.car = ts.Current;
-            }
-
-            if(!ts.MoveNext()) // to cdr
-            {
-                // no cdr exists
-                throw new CCParserException();
-            }
-            list.cdr = ParseListContinue(ts);
-
-            return list;
-        }
-
-        private IEnumerator<CCObject> Scan(TextReader cs)
-        {
-            while (cs.Peek() != -1)
-            {
-                if (Char.IsWhiteSpace((char)cs.Peek()))
-                {
-                    cs.Read();
-                }
-                else
-                {
-                    var c = (char)cs.Peek();
-                    var sel = from x in SpecialChar.ToCharArray() where x == c select x;
-                    if (sel.Count() == 0)
-                    {
-                        yield return ReadToWhiteSpace(cs);
-                    }
-                    else
-                    {
-                        cs.Read();
-                        if (c == '(')
-                        {
-                            yield return ParenL;
-                        }
-                        else if (c == ')')
-                        {
-                            yield return ParenR;
-                        }
-                        else
-                        {
-                            throw new NotImplementedException();
-                        }
-                    }
-                }
-            }
-        }
 
         private CCSymbol GetSymbol(string name)
         {
@@ -748,84 +475,6 @@ namespace CCLisp.Model
                 };
                 Symbols[name] = s;
                 return s;
-            }
-        }
-
-        private CCObject ReadToWhiteSpace(TextReader tr)
-        {
-            int st = 0;
-
-            var sb = new StringBuilder();
-            while (tr.Peek() != -1 && !Char.IsWhiteSpace((char)tr.Peek()) && (from x in SpecialChar.ToCharArray() where x == tr.Peek() select x).Count() == 0)
-            {
-                // state machine
-                switch (st)
-                {
-                    case 0: // first char
-                        if ((char)tr.Peek() == '-')
-                        {
-                            st = 3;
-                        }
-                        else if (Char.IsDigit((char)tr.Peek()))
-                        {
-                            st = 1;
-                        }
-                        else
-                        {
-                            st = 2;
-                        }
-                        break;
-
-
-                    case 1: // maybe number
-                        if (Char.IsDigit((char)tr.Peek()))
-                        {
-                            st = 1;
-                        }
-                        else
-                        {
-                            st = 2;
-                        }
-                        break;
-
-                    case 3: // first minus
-                        if (Char.IsDigit((char)tr.Peek()))
-                        {
-                            st = 1;
-                        }
-                        else
-                        {
-                            st = 2;
-                        }
-                        break;
-
-                    default:    // symbol
-                        break;
-                }
-                sb.Append((char)tr.Read());
-            }
-
-            if (st == 1)
-            {
-                return new CCInt()
-                {
-                    value = int.Parse(sb.ToString())
-                };
-            }
-            else
-            {
-                if (sb.ToString() == "nil")
-                {
-                    return Nil;
-                }
-                else
-                {
-                    //return GetSymbol(sb.ToString());
-                    return new CCIdentifier()
-                    {
-                        Name = sb.ToString()
-                    };
-                }
             }
         }
     }

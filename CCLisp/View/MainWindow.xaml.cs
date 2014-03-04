@@ -23,13 +23,17 @@ namespace CCLisp.View
     /// </summary>
     public partial class MainWindow : Window
     {
-        private CCInterpreter interp;
+        private CCParser parser;
+        private CCCompiler comp;
+        private CCVM vm;
 
         public MainWindow()
         {
             InitializeComponent();
 
-            interp = new CCInterpreter();
+            parser = new CCParser();
+            comp = new CCCompiler();
+            vm = new CCVM();
         }
 
         private void Eval_Click(object sender, RoutedEventArgs e)
@@ -40,14 +44,14 @@ namespace CCLisp.View
                 IEnumerable<CCObject> obj;
                 try
                 {
-                    obj = interp.Read(sr);
+                    obj = parser.Read(sr);
 
                     foreach (var i in obj)
                     {
-                        var c = interp.Compile(i);
+                        var c = comp.Compile(i);
                         EvalResult.Text += c.ToString() + "\n";
-                        interp.Eval(c);
-                        EvalResult.Text += interp.GetResult();
+                        vm.Eval(c);
+                        EvalResult.Text += vm.GetResult();
                     }
 
                 }

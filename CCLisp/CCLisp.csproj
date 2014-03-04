@@ -61,14 +61,16 @@
       <DependentUpon>App.xaml</DependentUpon>
       <SubType>Code</SubType>
     </Compile>
+    <Compile Include="Model\CCCompiler.cs" />
     <Compile Include="Model\CCException.cs" />
+    <Compile Include="Model\CCParser.cs" />
     <Compile Include="View\MainWindow.xaml.cs">
       <DependentUpon>MainWindow.xaml</DependentUpon>
       <SubType>Code</SubType>
     </Compile>
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Model\CCInterpreter.cs" />
+    <Compile Include="Model\CCVM.cs" />
     <Compile Include="Model\CCObject.cs" />
     <Compile Include="Properties\AssemblyInfo.cs">
       <SubType>Code</SubType>
