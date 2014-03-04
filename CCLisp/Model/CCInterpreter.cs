@@ -17,7 +17,7 @@ namespace CCLisp.Model
         private CCParenR ParenR = new CCParenR();
         private CCNil    Nil    = new CCNil();
 
-        private string[] Builtin = {"+", "-", "*", "/", "car", "cdr", "cons"};
+        private string[] Builtin = {"+", "-", "*", "/", "car", "cdr", "cons", "eq", "<", ">", "<=", ">="};
 
         // simbol dictionary
         private Dictionary<string, CCSymbol> Symbols = new Dictionary<string, CCSymbol>();
@@ -369,11 +369,11 @@ namespace CCLisp.Model
                             Dump = code;
                             if (tf.GetType() != typeof(CCNil))
                             {
-                                Code = ct;
+                                code = ct;
                             }
                             else
                             {
-                                Code = cf;
+                                code = cf;
                             }
                         }
                         return true;
@@ -519,6 +519,83 @@ namespace CCLisp.Model
                             Stack = cons.cdr;
                         }
                         return true;
+
+                    case "eq":
+                        {
+                            var s1 = Stack;
+                            var s2 = Stack;
+                            if (s1.Equals(s2))
+                            {
+                                Stack = Symbols["t"];
+                            }
+                            else
+                            {
+                                Stack = Nil;
+                            }
+                        }
+                        return true;
+
+                    case "<":
+                        {
+                            var s1 = Stack as CCInt;
+                            var s2 = Stack as CCInt;
+                            if (s1.value < s2.value)
+                            {
+                                Stack = Symbols["t"];
+                            }
+                            else
+                            {
+                                Stack = Nil;
+                            }
+                        }
+                        return true;
+
+                    case ">":
+                        {
+                            var s1 = Stack as CCInt;
+                            var s2 = Stack as CCInt;
+                            if (s1.value > s2.value)
+                            {
+                                Stack = Symbols["t"];
+                            }
+                            else
+                            {
+                                Stack = Nil;
+                            }
+                        }
+                        return true;
+
+                    case "<=":
+                        {
+                            var s1 = Stack as CCInt;
+                            var s2 = Stack as CCInt;
+                            if (s1.value <= s2.value)
+                            {
+                                Stack = Symbols["t"];
+                            }
+                            else
+                            {
+                                Stack = Nil;
+                            }
+                        }
+                        return true;
+
+                    case ">=":
+                        {
+                            var s1 = Stack as CCInt;
+                            var s2 = Stack as CCInt;
+                            if (s1.value >= s2.value)
+                            {
+                                Stack = Symbols["t"];
+                            }
+                            else
+                            {
+                                Stack = Nil;
+                            }
+                        }
+                        return true;
+
+
 
                     default:
                         throw new NotImplementedException();
@@ -687,7 +764,7 @@ namespace CCLisp.Model
                     case 0: // first char
                         if ((char)tr.Peek() == '-')
                         {
-                            st = 1;
+                            st = 3;
                         }
                         else if (Char.IsDigit((char)tr.Peek()))
                         {
@@ -701,6 +778,17 @@ namespace CCLisp.Model
 
 
                     case 1: // maybe number
+                        if (Char.IsDigit((char)tr.Peek()))
+                        {
+                            st = 1;
+                        }
+                        else
+                        {
+                            st = 2;
+                        }
+                        break;
+
+                    case 3: // first minus
                         if (Char.IsDigit((char)tr.Peek()))
                         {
                             st = 1;
