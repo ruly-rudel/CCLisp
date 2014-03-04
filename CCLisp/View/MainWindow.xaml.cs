@@ -48,15 +48,6 @@ namespace CCLisp.View
                         EvalResult.Text += c.ToString() + "\n";
                         interp.Eval(c);
                         EvalResult.Text += interp.GetResult();
-                        //var eobj = interp.GetResult();
-                        //if (eobj != null)
-                        //{
-                        //    EvalResult.Text += eobj.ToString();
-                        //}
-                        //else
-                        //{
-                        //    EvalResult.Text += "()\n";
-                        //}
                     }
 
                 }
@@ -65,19 +56,6 @@ namespace CCLisp.View
                     EvalResult.Text += ex.Message;
                 }
             }
-
-
-
-
-            //var eobj = interp.Eval(obj);
-            //if (eobj != null)
-            //{
-            //    EvalResult.Text += eobj.ToString();
-            //}
-            //else
-            //{
-            //    EvalResult.Text = interp.LogString;
-            //}
         }
     }
 }

@@ -17,6 +17,8 @@ namespace CCLisp.Model
         private CCParenR ParenR = new CCParenR();
         private CCNil    Nil    = new CCNil();
 
+        private string[] Builtin = {"+", "-", "*", "/", "car", "cdr", "cons"};
+
         // simbol dictionary
         private Dictionary<string, CCSymbol> Symbols = new Dictionary<string, CCSymbol>();
 
@@ -179,7 +181,8 @@ namespace CCLisp.Model
                 if(fcn.GetType() != typeof(CCCons)) // apply function is a builtin, lambda or special form
                 {
                     var fn = fcn as CCIdentifier;
-                    if(fn.Name == "+")  // builtin
+                    var name = from x in Builtin where x == fn.Name select x;
+                    if(name.Count() == 1)  // builtin
                     {
                         return CompileBuiltin(args, en, new CCCons(fcn, cont));
                     }
@@ -209,7 +212,10 @@ namespace CCLisp.Model
                         {
                             return new CCCons(new CCIS("DUM"), new CCCons(Nil, CompileApp(values, newn, CompileLambda(body, newn, new CCCons(new CCIS("RAP"), cont)))));
                         }
-
+                    }
+                    else if (fn.Name == "quote")    // quote
+                    {
+                        return new CCCons(new CCIS("LDC"), new CCCons((args as CCCons).car, cont));
                     }
                     else
                     {
@@ -462,6 +468,58 @@ namespace CCLisp.Model
                         }
                         return true;
 
+                    case "-":
+                        {
+                            var s1 = Stack as CCInt;
+                            var s2 = Stack as CCInt;
+                            var ret = new CCInt();
+                            ret.value = s1.value - s2.value;
+                            Stack = ret;
+                        }
+                        return true;
+
+                    case "*":
+                        {
+                            var s1 = Stack as CCInt;
+                            var s2 = Stack as CCInt;
+                            var ret = new CCInt();
+                            ret.value = s1.value * s2.value;
+                            Stack = ret;
+                        }
+                        return true;
+
+                    case "/":
+                        {
+                            var s1 = Stack as CCInt;
+                            var s2 = Stack as CCInt;
+                            var ret = new CCInt();
+                            ret.value = s1.value / s2.value;
+                            Stack = ret;
+                        }
+                        return true;
+
+                    case "cons":
+                        {
+                            var car = Stack;
+                            var cdr = Stack;
+                            Stack = new CCCons(car, cdr);
+                        }
+                        return true;
+
+                    case "car":
+                        {
+                            var cons = Stack as CCCons;
+                            Stack = cons.car;
+                        }
+                        return true;
+
+                    case "cdr":
+                        {
+                            var cons = Stack as CCCons;
+                            Stack = cons.cdr;
+                        }
+                        return true;
+
                     default:
                         throw new NotImplementedException();
                 }
@@ -497,201 +555,6 @@ namespace CCLisp.Model
                 return (env as CCCons).car;
             }
         }
-
-        //public void Eval(CCObject obj)
-        //{
-        //    if (obj.GetType() == typeof(CCInt)) // number
-        //    {
-        //        Stack = obj;
-        //    }
-        //    else if(obj.GetType() == typeof(CCSymbol))  // symbol
-        //    {
-        //        var sym = obj as CCSymbol;
-        //        if (sym.Value != null)
-        //        {
-        //            Stack = sym;
-        //        }
-        //        else
-        //        {
-        //            throw new CCRuntimeSymbolValueIsNotBoundException(stack, env, code, dump);
-        //        }
-        //    }
-        //    else if (obj.GetType() == typeof(CCIdentifier)) // execute binding
-        //    {
-        //        var id = obj as CCIdentifier;
-        //        if(Symbols.ContainsKey(id.Name))
-        //        {
-        //            var sym = Symbols[id.Name];
-        //            if (sym.Value != null)
-        //            {
-        //                Stack = sym;
-        //            }
-        //            else
-        //            {
-        //                throw new CCRuntimeSymbolValueIsNotBoundException(stack, env, code, dump);
-        //            }
-        //        }
-        //        else
-        //        {
-        //            throw new CCRuntimeSymbolIsNotFoundException(stack, env, code, dump);
-        //        }
-
-        //    }
-        //    else if (obj.GetType() == typeof(CCCons))   // execute apply
-        //    {
-        //        SetEvalTop(obj as CCCons);
-        //        while (EvalTop().GetType() != typeof(CCISHALT))
-        //            ;
-        //    }
-        //    else if (obj.GetType() == typeof(CCNil))    // nil
-        //    {
-        //        Stack = Nil;
-        //    }
-        //    else
-        //    {
-        //        throw new NotImplementedException();
-        //    }
-        //}
-
-        //private void SetEvalTop(CCCons obj)
-        //{
-        //    if(obj.car.GetType() == typeof(CCIdentifier))
-        //    {
-        //        Code = new CCISHALT();
-        //        var car = obj.car as CCIdentifier;
-
-        //        // special forms
-        //        switch(car.Name)
-        //        {
-        //            case "if":
-        //                SetEvalTopWithIf(obj);
-        //                break;
-
-        //            default:    // assume normal function application;
-        //                SetEvalTopWithApply(obj);
-        //                break;
-        //        }
-                
-        //    }
-        //    else
-        //    {
-        //        SetEvalTopWithApply(obj);
-        //    }
-        //}
-
-        //private void SetEvalTopWithApply(CCCons obj)
-        //{
-        //    // push apply function
-        //    var ap = new CCCons();
-        //    ap.car = new CCISAP();
-        //    ap.cdr = (obj as CCCons).car;
-        //    Code = ap;
-
-        //    CCObject p = obj.cdr;
-        //    while (p.GetType() != typeof(CCNil))
-        //    {
-        //        var pp = p as CCCons;
-        //        Code = pp.car;
-        //        p = pp.cdr;
-        //    }
-        //}
-
-        //private void SetEvalTopWithIf(CCCons obj)
-        //{
-        //    CCCons c1 = obj.cdr as CCCons;
-        //    CCCons c2 = c1.cdr as CCCons;
-        //    CCCons c3 = c2.cdr as CCCons;
-
-        //    CCObject cond = c1.car;
-        //    CCObject tbr = c2.car;
-        //    CCObject fbr = c3.car;
-
-
-        //    // push if function
-        //    var iffn = new CCCons();
-        //    iffn.car = new CCISIF();
-
-        //    var br = new CCCons();
-        //    br.car = tbr;
-        //    br.cdr = fbr;
-        //    iffn.cdr = br;
-        //    Code = iffn;
-
-        //    Code = cond;
-        //}
-
-        //private CCObject EvalTop()
-        //{
-        //    var obj = Code;
-
-        //    if(obj.GetType() == typeof(CCISHALT))
-        //    {
-        //        return obj;
-        //    }
-        //    else if (obj.GetType() == typeof(CCCons) && (obj as CCCons).car.GetType() == typeof(CCISAP))
-        //    {
-        //        var sym = (obj as CCCons).cdr as CCIdentifier;
-        //        CCInt a, b, r;
-
-        //        // bulitin functions
-        //        switch (sym.Name)
-        //        {
-        //            case "+":
-        //                a = Stack as CCInt;
-        //                b = Stack as CCInt;
-
-        //                r = new CCInt();
-        //                r.value = a.value + b.value;
-        //                Stack = r;
-        //                return r;
-
-        //            default: // normal apply
-        //                throw new NotImplementedException();
-        //        }
-        //    }
-        //    else if(obj.GetType() == typeof(CCCons) && (obj as CCCons).car.GetType() == typeof(CCISIF))
-        //    {
-        //        var br = (obj as CCCons).cdr as CCCons;
-        //        var cond = Stack;
-        //        if (cond.GetType() == typeof(CCNil))
-        //        {
-        //            Eval(br.cdr);
-        //        }
-        //        else
-        //        {
-        //            Eval(br.car);
-        //        }
-        //        return cond;    // must be fixed;
-        //    }
-        //    else if(obj.GetType() == typeof(CCNil))
-        //    {
-        //        Stack = Nil;
-        //        return Nil;
-        //    }
-        //    else
-        //    {
-        //        // DUM
-        //        Dump = code;
-        //        Dump = env;
-        //        Dump = stack;
-
-        //        // setup
-        //        stack = Nil;
-        //        code = Nil;
-
-        //        // eval
-        //        Eval(obj);
-
-        //        // RET
-        //        var s1 = Stack;
-        //        stack = Dump;
-        //        env = Dump;
-        //        code = Dump;
-        //        Stack = s1;
-
-        //        return s1;
-        //    }
-        //}
 
         public CCObject GetResult()
         {
