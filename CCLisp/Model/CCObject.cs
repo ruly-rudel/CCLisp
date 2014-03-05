@@ -66,6 +66,14 @@ namespace CCLisp.Model
         }
     }
 
+    public class CCT : CCObject
+    {
+        public override string ToString()
+        {
+            return "t";
+        }
+    }
+
     public class CCInt : CCObject
     {
         public int value { get; set; }

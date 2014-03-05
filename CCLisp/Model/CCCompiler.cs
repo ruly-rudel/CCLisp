@@ -14,7 +14,7 @@ namespace CCLisp.Model
 
         public CCCompiler()
         {
-            symbols = new CCCons(null, null);
+            symbols = new CCCons(new CCCons(new CCIdentifier() { Name = "t" }, null), null);
         }
 
 

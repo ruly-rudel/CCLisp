@@ -13,9 +13,6 @@ namespace CCLisp.Model
 
         private string[] Builtin = {"+", "-", "*", "/", "car", "cdr", "cons", "eq", "<", ">", "<=", ">="};
 
-        // simbol dictionary
-        private Dictionary<string, CCSymbol> Symbols = new Dictionary<string, CCSymbol>();
-
         // evaluation environments
         private CCObject stack;
         private CCObject Stack
@@ -127,11 +124,9 @@ namespace CCLisp.Model
             code = null;
             dump = null;
 
-            // make special simbol t
-            var t = new CCSymbol();
-            t.Name = "t";
-            t.Value = t;
-            Symbols["t"] = t;
+            // make special symbol t
+
+            env = new CCCons(new CCCons(null, null), null);
         }
 
 
@@ -353,7 +348,7 @@ namespace CCLisp.Model
                             var s2 = Stack;
                             if (s1.Equals(s2))
                             {
-                                Stack = Symbols["t"];
+                                Stack = new CCT();
                             }
                             else
                             {
@@ -368,7 +363,7 @@ namespace CCLisp.Model
                             var s2 = Stack as CCInt;
                             if (s1.value < s2.value)
                             {
-                                Stack = Symbols["t"];
+                                Stack = new CCT();
                             }
                             else
                             {
@@ -383,7 +378,7 @@ namespace CCLisp.Model
                             var s2 = Stack as CCInt;
                             if (s1.value > s2.value)
                             {
-                                Stack = Symbols["t"];
+                                Stack = new CCT();
                             }
                             else
                             {
@@ -398,7 +393,7 @@ namespace CCLisp.Model
                             var s2 = Stack as CCInt;
                             if (s1.value <= s2.value)
                             {
-                                Stack = Symbols["t"];
+                                Stack = new CCT();
                             }
                             else
                             {
@@ -413,7 +408,7 @@ namespace CCLisp.Model
                             var s2 = Stack as CCInt;
                             if (s1.value >= s2.value)
                             {
-                                Stack = Symbols["t"];
+                                Stack = new CCT();
                             }
                             else
                             {
@@ -457,24 +452,6 @@ namespace CCLisp.Model
             else
             {
                 return (env as CCCons).car;
-            }
-        }
-
-
-        private CCSymbol GetSymbol(string name)
-        {
-            if (Symbols.ContainsKey(name))
-            {
-                return Symbols[name];
-            }
-            else
-            {
-                var s = new CCSymbol()
-                {
-                    Name = name
-                };
-                Symbols[name] = s;
-                return s;
             }
         }
     }
