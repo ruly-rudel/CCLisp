@@ -33,7 +33,11 @@ namespace CCLisp.Model
 
         public override string ToString()
         {
-            if(cdr.GetType() == typeof(CCCons))
+            if (cdr == null)
+            {
+                return "(" + (car == null ? "nil" : car.ToString()) + ")";
+            }
+            else if(cdr.GetType() == typeof(CCCons))
             {
                 return "(" + (car == null ? "nil" : car.ToString()) + " " + (cdr as CCCons).ToStringCont();
             }

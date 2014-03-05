@@ -10,12 +10,19 @@ namespace CCLisp.Model
     {
         private string[] Builtin = { "+", "-", "*", "/", "car", "cdr", "cons", "eq", "<", ">", "<=", ">=" };
 
+        private CCCons symbols;
+
+        public CCCompiler()
+        {
+            symbols = new CCCons(null, null);
+        }
+
 
         public CCObject Compile(CCObject obj)
         {
             var cont = new CCCons(new CCIS("HALT"), null);
 
-            return Compile1(obj, null, cont);
+            return Compile1(obj, new CCCons(symbols, null), cont);
         }
 
         private CCObject Compile1(CCObject exp, CCCons env, CCObject cont)
@@ -79,6 +86,37 @@ namespace CCLisp.Model
                     else if (fn.Name == "quote")    // quote
                     {
                         return new CCCons(new CCIS("LDC"), new CCCons((args as CCCons).car, cont));
+                    }
+                    else if(fn.Name == "setf")    // setf
+                    {
+                        var argsc = args as CCCons;
+
+                        var symbol = argsc.car as CCIdentifier;
+                        var value = argsc.cadr;
+
+                        var pos = Index(symbol, env);
+                        if (pos == null)
+                        {
+                            // create new symbol(root environment)
+                            CCCons i = symbols;
+                            while (i.cdr != null)
+                                i = i.cdr as CCCons;
+
+                            if (i.car == null)
+                            {
+                                i.car = symbol;
+                            }
+                            else
+                            {
+                                var cons = new CCCons(symbol, null);
+                                i.cdr = cons;
+                            }
+
+                            // re-find index
+                            pos = Index(symbol, env);
+                        }
+
+                        return new CCCons(new CCIS("ST"), new CCCons(pos, Compile1(value, env, cont)));
                     }
                     else
                     {
@@ -159,7 +197,7 @@ namespace CCLisp.Model
 
         private int Index2(CCIdentifier exp, CCCons env, int j)
         {
-            if (env == null)
+            if (env == null || env.car == null)
             {
                 return -1;
             }
