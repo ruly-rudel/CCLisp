@@ -29,13 +29,13 @@ namespace CCLisp.Model
                 }
                 else
                 {
-                    var ij = Index(exp, en);
-                    if (ij == Nil) // number
+                    if (exp.GetType() == typeof(CCInt))
                     {
                         return new CCCons(new CCIS("LDC"), new CCCons(exp, cont));
                     }
                     else // identifier
                     {
+                        var ij = Index(exp as CCIdentifier, en);
                         return new CCCons(new CCIS("LD"), new CCCons(ij, cont));
                     }
                 }
@@ -86,7 +86,7 @@ namespace CCLisp.Model
                     }
                     else
                     {
-                        return new CCCons(Nil, CompileApp(args, en, new CCCons(new CCIS("LD"), new CCCons(Index(fcn, en), new CCCons(new CCIS("AP"), cont)))));
+                        return new CCCons(Nil, CompileApp(args, en, new CCCons(new CCIS("LD"), new CCCons(Index(fcn as CCIdentifier, en), new CCCons(new CCIS("AP"), cont)))));
                     }
                 }
                 else // application with nested function
@@ -136,46 +136,43 @@ namespace CCLisp.Model
             }
         }
 
-        private CCObject Index(CCObject exp, CCObject en)
+        private CCCons Index(CCIdentifier exp, CCObject en)
         {
             return Index(exp, en, 1);
         }
 
-        private CCObject Index(CCObject exp, CCObject en, int i)
+        private CCCons Index(CCIdentifier exp, CCObject en, int i)
         {
             if (en.GetType() == typeof(CCNil))
             {
-                return Nil;
+                return null;
             }
             else
             {
-                CCObject j = Index2(exp, (en as CCCons).car, 1);
-                if (j.GetType() == typeof(CCNil))
+                var j = Index2(exp, (en as CCCons).car, 1);
+                if (j < 0)
                 {
                     return Index(exp, (en as CCCons).cdr, i + 1);
                 }
                 else
                 {
-                    return new CCCons(new CCInt() { value = i }, j);
+                    return new CCCons(new CCInt() { value = i }, new CCInt() { value = j });
                 }
             }
         }
 
-        private CCObject Index2(CCObject exp, CCObject en, int j)
+        private int Index2(CCIdentifier exp, CCObject en, int j)
         {
             if (en.GetType() == typeof(CCNil))
             {
-                return Nil;
+                return -1;
             }
             else
             {
                 var e = en as CCCons;
                 if (e.car.ToString() == exp.ToString())
                 {
-                    return new CCInt()
-                    {
-                        value = j
-                    };
+                    return j;
                 }
                 else
                 {
