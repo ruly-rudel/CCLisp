@@ -8,7 +8,6 @@ namespace CCLisp.Model
 {
     class CCCompiler
     {
-//        private CCNil Nil = new CCNil();
         private string[] Builtin = { "+", "-", "*", "/", "car", "cdr", "cons", "eq", "<", ">", "<=", ">=" };
 
 
@@ -19,7 +18,7 @@ namespace CCLisp.Model
             return Compile1(obj, null, cont);
         }
 
-        private CCObject Compile1(CCObject exp, CCObject en, CCObject cont)
+        private CCObject Compile1(CCObject exp, CCCons env, CCObject cont)
         {
             if (exp == null)    // nil
             {
@@ -33,7 +32,7 @@ namespace CCLisp.Model
                 }
                 else // identifier
                 {
-                    var ij = Index(exp as CCIdentifier, en);
+                    var ij = Index(exp as CCIdentifier, env);
                         return new CCCons(new CCIS("LD"), new CCCons(ij, cont));
                 }
             }
@@ -48,29 +47,29 @@ namespace CCLisp.Model
                     var name = from x in Builtin where x == fn.Name select x;
                     if (name.Count() == 1)  // builtin
                     {
-                        return CompileBuiltin(args, en, new CCCons(fcn, cont));
+                        return CompileBuiltin(args, env, new CCCons(fcn, cont));
                     }
                     else if (fn.Name == "lambda") // lambda special form
                     {
                         var argsc = args as CCCons;
-                        return CompileLambda(argsc.cadr, new CCCons(argsc.car, en), cont);
+                        return CompileLambda(argsc.cadr, new CCCons(argsc.car, env), cont);
                     }
                     else if (fn.Name == "if") // if special form
                     {
                         var argsc = args as CCCons;
-                        return CompileIf(argsc.car, argsc.cadr, argsc.caddr, en, cont);
+                        return CompileIf(argsc.car, argsc.cadr, argsc.caddr, env, cont);
                     }
                     else if (fn.Name == "let" || fn.Name == "letrec") // let or letrec
                     {
                         var argsc = args as CCCons;
 
-                        var newn = new CCCons(argsc.car, en);
+                        var newn = new CCCons(argsc.car, env);
                         var values = argsc.cadr;
                         var body = argsc.caddr;
 
                         if (fn.Name == "let") // let
                         {
-                            return new CCCons(null, CompileApp(values, en, CompileLambda(body, newn, new CCCons(new CCIS("AP"), cont))));
+                            return new CCCons(null, CompileApp(values, env, CompileLambda(body, newn, new CCCons(new CCIS("AP"), cont))));
                         }
                         else // letrec
                         {
@@ -83,17 +82,17 @@ namespace CCLisp.Model
                     }
                     else
                     {
-                        return new CCCons(null, CompileApp(args, en, new CCCons(new CCIS("LD"), new CCCons(Index(fcn as CCIdentifier, en), new CCCons(new CCIS("AP"), cont)))));
+                        return new CCCons(null, CompileApp(args, env, new CCCons(new CCIS("LD"), new CCCons(Index(fcn as CCIdentifier, env), new CCCons(new CCIS("AP"), cont)))));
                     }
                 }
                 else // application with nested function
                 {
-                    return new CCCons(null, CompileApp(args, en, Compile1(fcn, en, new CCCons(new CCIS("AP"), cont))));
+                    return new CCCons(null, CompileApp(args, env, Compile1(fcn, env, new CCCons(new CCIS("AP"), cont))));
                 }
             }
         }
 
-        private CCObject CompileBuiltin(CCObject args, CCObject en, CCObject cont)
+        private CCObject CompileBuiltin(CCObject args, CCCons env, CCObject cont)
         {
             if (args == null)
             {
@@ -101,27 +100,27 @@ namespace CCLisp.Model
             }
             else
             {
-                return CompileBuiltin((args as CCCons).cdr, en, Compile1((args as CCCons).car, en, cont));
+                return CompileBuiltin((args as CCCons).cdr, env, Compile1((args as CCCons).car, env, cont));
             }
         }
 
-        private CCObject CompileIf(CCObject test, CCObject t, CCObject f, CCObject en, CCObject cont)
+        private CCObject CompileIf(CCObject test, CCObject t, CCObject f, CCCons env, CCObject cont)
         {
-            return Compile1(test, en, new CCCons(
+            return Compile1(test, env, new CCCons(
                 new CCIS("SEL"), new CCCons(
-                    Compile1(t, en, new CCCons(new CCIS("JOIN"), null)), new CCCons(
-                        Compile1(f, en, new CCCons(new CCIS("JOIN"), null)), cont))));
+                    Compile1(t, env, new CCCons(new CCIS("JOIN"), null)), new CCCons(
+                        Compile1(f, env, new CCCons(new CCIS("JOIN"), null)), cont))));
         }
 
-        private CCObject CompileLambda(CCObject body, CCObject en, CCObject cont)
+        private CCObject CompileLambda(CCObject body, CCCons env, CCObject cont)
         {
             return new CCCons(
                 new CCIS("LDF"), new CCCons(
-                    Compile1(body, en, new CCCons(new CCIS("RTN"), null)),
+                    Compile1(body, env, new CCCons(new CCIS("RTN"), null)),
                     cont));
         }
 
-        private CCObject CompileApp(CCObject args, CCObject en, CCObject cont)
+        private CCObject CompileApp(CCObject args, CCCons env, CCObject cont)
         {
             if (args == null)
             {
@@ -129,27 +128,27 @@ namespace CCLisp.Model
             }
             else
             {
-                return CompileApp((args as CCCons).cdr, en, Compile1((args as CCCons).car, en, new CCCons(new CCIS("CONS"), cont)));
+                return CompileApp((args as CCCons).cdr, env, Compile1((args as CCCons).car, env, new CCCons(new CCIS("CONS"), cont)));
             }
         }
 
-        private CCCons Index(CCIdentifier exp, CCObject en)
+        private CCCons Index(CCIdentifier exp, CCCons env)
         {
-            return Index(exp, en, 1);
+            return Index(exp, env, 1);
         }
 
-        private CCCons Index(CCIdentifier exp, CCObject en, int i)
+        private CCCons Index(CCIdentifier exp, CCCons env, int i)
         {
-            if (en == null)
+            if (env == null)
             {
                 return null;
             }
             else
             {
-                var j = Index2(exp, (en as CCCons).car, 1);
+                var j = Index2(exp, env.car as CCCons, 1);
                 if (j < 0)
                 {
-                    return Index(exp, (en as CCCons).cdr, i + 1);
+                    return Index(exp, env.cdr as CCCons, i + 1);
                 }
                 else
                 {
@@ -158,22 +157,21 @@ namespace CCLisp.Model
             }
         }
 
-        private int Index2(CCIdentifier exp, CCObject en, int j)
+        private int Index2(CCIdentifier exp, CCCons env, int j)
         {
-            if (en == null)
+            if (env == null)
             {
                 return -1;
             }
             else
             {
-                var e = en as CCCons;
-                if (e.car.ToString() == exp.ToString())
+                if (env.car.ToString() == exp.ToString())
                 {
                     return j;
                 }
                 else
                 {
-                    return Index2(exp, e.cdr, j + 1);
+                    return Index2(exp, env.cdr as CCCons, j + 1);
                 }
             }
         }

@@ -13,7 +13,6 @@ namespace CCLisp.Model
 
         private CCParenL ParenL = new CCParenL();
         private CCParenR ParenR = new CCParenR();
-//        private CCNil Nil = new CCNil();
 
         public IEnumerable<CCObject> Read(StringReader sr)
         {
