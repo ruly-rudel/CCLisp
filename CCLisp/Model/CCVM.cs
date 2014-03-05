@@ -9,7 +9,7 @@ namespace CCLisp.Model
     public class CCVM
     {
         // single oblects (must make it singleton?
-        private CCNil    Nil    = new CCNil();
+        //private CCNil    Nil    = new CCNil();
 
         private string[] Builtin = {"+", "-", "*", "/", "car", "cdr", "cons", "eq", "<", ">", "<=", ">="};
 
@@ -22,9 +22,9 @@ namespace CCLisp.Model
         {
             get
             {
-                if (stack.GetType() == typeof(CCNil))
+                if (stack == null)
                 {
-                    return Nil;
+                    return null;
                 }
                 else
                 {
@@ -46,9 +46,9 @@ namespace CCLisp.Model
         {
             get
             {
-                if (env.GetType() == typeof(CCNil))
+                if (env == null)
                 {
-                    return Nil;
+                    return null;
                 }
                 else
                 {
@@ -70,9 +70,9 @@ namespace CCLisp.Model
         {
             get
             {
-                if (code.GetType() == typeof(CCNil))
+                if (code == null)
                 {
-                    return Nil;
+                    return null;
                 }
                 else if(code.GetType() == typeof(CCCons))
                 {
@@ -83,7 +83,7 @@ namespace CCLisp.Model
                 else
                 {
                     var top = code;
-                    code = Nil;
+                    code = null;
                     return top;
                 }
             }
@@ -100,9 +100,9 @@ namespace CCLisp.Model
         {
             get
             {
-                if (dump.GetType() == typeof(CCNil))
+                if (dump == null)
                 {
-                    return Nil;
+                    return null;
                 }
                 else
                 {
@@ -122,10 +122,10 @@ namespace CCLisp.Model
         public CCVM()
         {
             // clear environment
-            stack = Nil;
-            env = Nil;
-            code = Nil;
-            dump = Nil;
+            stack = null;
+            env = null;
+            code = null;
+            dump = null;
 
             // make special simbol t
             var t = new CCSymbol();
@@ -138,10 +138,10 @@ namespace CCLisp.Model
 
         public void Eval(CCObject obj)
         {
-            stack = Nil;
-            env = Nil;
+            stack = null;
+            env = null;
             code = obj;
-            dump = Nil;
+            dump = null;
             while (EvalTop()) ;
         }
 
@@ -158,7 +158,7 @@ namespace CCLisp.Model
             var obj = Code;
             if (obj.GetType() == typeof(CCNil))
             {
-                Stack = Nil;
+                Stack = null;
                 return true;
             }
             else if(obj.GetType() == typeof(CCIS))
@@ -194,7 +194,7 @@ namespace CCLisp.Model
                             var cf = Code;
                             var tf = Stack;
                             Dump = code;
-                            if (tf.GetType() != typeof(CCNil))
+                            if (tf != null)
                             {
                                 code = ct;
                             }
@@ -228,7 +228,7 @@ namespace CCLisp.Model
                             Dump = stack;
 
                             // apply
-                            stack = Nil;
+                            stack = null;
                             env = fe.cdr;
                             Env = v;
                             code = fe.car;
@@ -247,7 +247,7 @@ namespace CCLisp.Model
                         return true;
 
                     case "DUM":
-                        Env = Nil;
+                        Env = null;
                         return true;
 
                     case "RAP":
@@ -266,7 +266,7 @@ namespace CCLisp.Model
                             Dump = stack;
 
                             // apply
-                            stack = Nil;
+                            stack = null;
                             env = fe.cdr;
                             Env = v;
                             code = fe.car;
@@ -357,7 +357,7 @@ namespace CCLisp.Model
                             }
                             else
                             {
-                                Stack = Nil;
+                                Stack = null;
                             }
                         }
                         return true;
@@ -372,7 +372,7 @@ namespace CCLisp.Model
                             }
                             else
                             {
-                                Stack = Nil;
+                                Stack = null;
                             }
                         }
                         return true;
@@ -387,7 +387,7 @@ namespace CCLisp.Model
                             }
                             else
                             {
-                                Stack = Nil;
+                                Stack = null;
                             }
                         }
                         return true;
@@ -402,7 +402,7 @@ namespace CCLisp.Model
                             }
                             else
                             {
-                                Stack = Nil;
+                                Stack = null;
                             }
                         }
                         return true;
@@ -417,7 +417,7 @@ namespace CCLisp.Model
                             }
                             else
                             {
-                                Stack = Nil;
+                                Stack = null;
                             }
                         }
                         return true;
