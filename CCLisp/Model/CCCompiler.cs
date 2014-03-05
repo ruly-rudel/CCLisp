@@ -14,7 +14,7 @@ namespace CCLisp.Model
 
         public CCCompiler()
         {
-            symbols = new CCCons(new CCCons(new CCIdentifier() { Name = "t" }, null), null);
+            symbols = new CCCons(null, null);
         }
 
 
@@ -116,7 +116,8 @@ namespace CCLisp.Model
                             pos = Index(symbol, env);
                         }
 
-                        return new CCCons(new CCIS("ST"), new CCCons(pos, Compile1(value, env, cont)));
+                        return Compile1(value, env, new CCCons(new CCIS("ST"), new CCCons(pos, cont)));
+                        //return new CCCons(new CCIS("ST"), new CCCons(pos, Compile1(value, env, cont)));
                     }
                     else
                     {

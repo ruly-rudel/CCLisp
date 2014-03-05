@@ -38,27 +38,27 @@ namespace CCLisp.Model
             }
         }
 
-        private CCObject env;
+        private CCObject _env;
         private CCObject Env
         {
             get
             {
-                if (env == null)
+                if (_env == null)
                 {
                     return null;
                 }
                 else
                 {
-                    var top = env as CCCons;
-                    env = top.cdr;
+                    var top = _env as CCCons;
+                    _env = top.cdr;
                     return top.car;
                 }
             }
 
             set
             {
-                var top = new CCCons(value, env);
-                env = top;
+                var top = new CCCons(value, _env);
+                _env = top;
             }
         }
 
@@ -120,13 +120,13 @@ namespace CCLisp.Model
         {
             // clear environment
             stack = null;
-            env = null;
+            _env = null;
             code = null;
             dump = null;
 
             // make special symbol t
 
-            env = new CCCons(new CCCons(null, null), null);
+            _env = new CCCons(new CCCons(null, null), null);
         }
 
 
@@ -134,7 +134,6 @@ namespace CCLisp.Model
         public void Eval(CCObject obj)
         {
             stack = null;
-            env = null;
             code = obj;
             dump = null;
             while (EvalTop()) ;
@@ -175,6 +174,16 @@ namespace CCLisp.Model
                         }
                         return true;
 
+                    case "ST":
+                        {
+                            var pos = Code as CCCons;
+                            int x = (pos.car as CCInt).value;
+                            int y = (pos.cdr as CCInt).value;
+
+                            SetEnvIndex(x, y, Stack);
+                        }
+                        return true;
+
                     case "CONS":
                         {
                             var car = Stack;
@@ -207,7 +216,7 @@ namespace CCLisp.Model
                     case "LDF":
                         {
                             var fn = Code;
-                            Stack = new CCCons(fn, env);
+                            Stack = new CCCons(fn, _env);
                         }
                         return true;
 
@@ -219,12 +228,12 @@ namespace CCLisp.Model
 
                             // dump
                             Dump = code;
-                            Dump = env;
+                            Dump = _env;
                             Dump = stack;
 
                             // apply
                             stack = null;
-                            env = fe.cdr;
+                            _env = fe.cdr;
                             Env = v;
                             code = fe.car;
                         }
@@ -234,7 +243,7 @@ namespace CCLisp.Model
                         {
                             var ret = Stack;
                             stack = Dump;
-                            env = Dump;
+                            _env = Dump;
                             code = Dump;
 
                             Stack = ret;
@@ -257,12 +266,12 @@ namespace CCLisp.Model
 
                             // dump
                             Dump = code;
-                            Dump = env;
+                            Dump = _env;
                             Dump = stack;
 
                             // apply
                             stack = null;
-                            env = fe.cdr;
+                            _env = fe.cdr;
                             Env = v;
                             code = fe.car;
                         }
@@ -428,7 +437,7 @@ namespace CCLisp.Model
 
         private CCObject GetEnvIndex(int x, int y)
         {
-            return GetEnvIndex1(x, y, env);
+            return GetEnvIndex1(x, y, _env);
         }
 
         private CCObject GetEnvIndex1(int x, int y, CCObject env)
@@ -452,6 +461,47 @@ namespace CCLisp.Model
             else
             {
                 return (env as CCCons).car;
+            }
+        }
+
+        private void SetEnvIndex(int x, int y, CCObject v)
+        {
+            var env = _env as CCCons;
+            SetEnvIndex1(x, y, ref env, v);
+            _env = env;
+        }
+
+        private void SetEnvIndex1(int x, int y, ref CCCons env, CCObject v)
+        {
+            if (x > 1)
+            {
+                var cdr = env.cdr as CCCons;
+                SetEnvIndex1(x - 1, y, ref cdr, v);
+                env.cdr = cdr;
+            }
+            else
+            {
+                var car = env.car as CCCons;
+                SetEnvIndex2(y, ref car, v);
+                env.car = car;
+            }
+        }
+
+        private void SetEnvIndex2(int y, ref CCCons env, CCObject v)
+        {
+            if (y > 1)
+            {
+                var cdr = env.cdr as CCCons;
+                if (cdr == null)
+                {
+                    cdr = new CCCons(null, null);
+                }
+                SetEnvIndex2(y - 1, ref cdr, v);
+                env.cdr = cdr;
+            }
+            else
+            {
+                env.car = v;
             }
         }
     }
