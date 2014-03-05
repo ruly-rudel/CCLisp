@@ -8,36 +8,33 @@ namespace CCLisp.Model
 {
     class CCCompiler
     {
-        private CCNil Nil = new CCNil();
+//        private CCNil Nil = new CCNil();
         private string[] Builtin = { "+", "-", "*", "/", "car", "cdr", "cons", "eq", "<", ">", "<=", ">=" };
 
 
         public CCObject Compile(CCObject obj)
         {
-            var cont = new CCCons(new CCIS("HALT"), Nil);
+            var cont = new CCCons(new CCIS("HALT"), null);
 
-            return Compile1(obj, Nil, cont);
+            return Compile1(obj, null, cont);
         }
 
         private CCObject Compile1(CCObject exp, CCObject en, CCObject cont)
         {
-            if (exp.GetType() != typeof(CCCons)) // nil, number or identifier
+            if (exp == null)    // nil
             {
-                if (exp.GetType() == typeof(CCNil)) // nil
+                return new CCCons(null, cont);
+            }
+            else if (exp.GetType() != typeof(CCCons)) // number or identifier
+            {
+                if (exp.GetType() == typeof(CCInt))
                 {
-                    return new CCCons(Nil, cont);
+                    return new CCCons(new CCIS("LDC"), new CCCons(exp, cont));
                 }
-                else
+                else // identifier
                 {
-                    if (exp.GetType() == typeof(CCInt))
-                    {
-                        return new CCCons(new CCIS("LDC"), new CCCons(exp, cont));
-                    }
-                    else // identifier
-                    {
-                        var ij = Index(exp as CCIdentifier, en);
+                    var ij = Index(exp as CCIdentifier, en);
                         return new CCCons(new CCIS("LD"), new CCCons(ij, cont));
-                    }
                 }
             }
             else // apply
@@ -73,11 +70,11 @@ namespace CCLisp.Model
 
                         if (fn.Name == "let") // let
                         {
-                            return new CCCons(Nil, CompileApp(values, en, CompileLambda(body, newn, new CCCons(new CCIS("AP"), cont))));
+                            return new CCCons(null, CompileApp(values, en, CompileLambda(body, newn, new CCCons(new CCIS("AP"), cont))));
                         }
                         else // letrec
                         {
-                            return new CCCons(new CCIS("DUM"), new CCCons(Nil, CompileApp(values, newn, CompileLambda(body, newn, new CCCons(new CCIS("RAP"), cont)))));
+                            return new CCCons(new CCIS("DUM"), new CCCons(null, CompileApp(values, newn, CompileLambda(body, newn, new CCCons(new CCIS("RAP"), cont)))));
                         }
                     }
                     else if (fn.Name == "quote")    // quote
@@ -86,19 +83,19 @@ namespace CCLisp.Model
                     }
                     else
                     {
-                        return new CCCons(Nil, CompileApp(args, en, new CCCons(new CCIS("LD"), new CCCons(Index(fcn as CCIdentifier, en), new CCCons(new CCIS("AP"), cont)))));
+                        return new CCCons(null, CompileApp(args, en, new CCCons(new CCIS("LD"), new CCCons(Index(fcn as CCIdentifier, en), new CCCons(new CCIS("AP"), cont)))));
                     }
                 }
                 else // application with nested function
                 {
-                    return new CCCons(Nil, CompileApp(args, en, Compile1(fcn, en, new CCCons(new CCIS("AP"), cont))));
+                    return new CCCons(null, CompileApp(args, en, Compile1(fcn, en, new CCCons(new CCIS("AP"), cont))));
                 }
             }
         }
 
         private CCObject CompileBuiltin(CCObject args, CCObject en, CCObject cont)
         {
-            if (args.GetType() == typeof(CCNil))
+            if (args == null)
             {
                 return cont;
             }
@@ -112,21 +109,21 @@ namespace CCLisp.Model
         {
             return Compile1(test, en, new CCCons(
                 new CCIS("SEL"), new CCCons(
-                    Compile1(t, en, new CCCons(new CCIS("JOIN"), Nil)), new CCCons(
-                        Compile1(f, en, new CCCons(new CCIS("JOIN"), Nil)), cont))));
+                    Compile1(t, en, new CCCons(new CCIS("JOIN"), null)), new CCCons(
+                        Compile1(f, en, new CCCons(new CCIS("JOIN"), null)), cont))));
         }
 
         private CCObject CompileLambda(CCObject body, CCObject en, CCObject cont)
         {
             return new CCCons(
                 new CCIS("LDF"), new CCCons(
-                    Compile1(body, en, new CCCons(new CCIS("RTN"), Nil)),
+                    Compile1(body, en, new CCCons(new CCIS("RTN"), null)),
                     cont));
         }
 
         private CCObject CompileApp(CCObject args, CCObject en, CCObject cont)
         {
-            if (args.GetType() == typeof(CCNil))
+            if (args == null)
             {
                 return cont;
             }
@@ -143,7 +140,7 @@ namespace CCLisp.Model
 
         private CCCons Index(CCIdentifier exp, CCObject en, int i)
         {
-            if (en.GetType() == typeof(CCNil))
+            if (en == null)
             {
                 return null;
             }
@@ -163,7 +160,7 @@ namespace CCLisp.Model
 
         private int Index2(CCIdentifier exp, CCObject en, int j)
         {
-            if (en.GetType() == typeof(CCNil))
+            if (en == null)
             {
                 return -1;
             }

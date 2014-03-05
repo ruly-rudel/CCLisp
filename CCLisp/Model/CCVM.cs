@@ -156,7 +156,7 @@ namespace CCLisp.Model
         private bool EvalTop()
         {
             var obj = Code;
-            if (obj.GetType() == typeof(CCNil))
+            if (obj == null)
             {
                 Stack = null;
                 return true;

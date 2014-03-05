@@ -35,27 +35,29 @@ namespace CCLisp.Model
         {
             if(cdr.GetType() == typeof(CCCons))
             {
-                return "(" + car.ToString() + " " + (cdr as CCCons).ToStringCont();
+                return "(" + (car == null ? "nil" : car.ToString()) + " " + (cdr as CCCons).ToStringCont();
             }
             else
             {
-                return "(" + car.ToString() + " . " + cdr.ToString() + ")";
+                return "(" + (car == null ? "nil" : car.ToString()) + " . " + cdr.ToString() + ")";
             }
         }
 
         public string ToStringCont()
         {
-            if(cdr.GetType() == typeof(CCNil)) 
+            var carstr = car == null ? "nil" : car.ToString();
+
+            if(cdr == null) 
             {
-                return car.ToString() + ")";
+                return carstr + ")";
             }
             else if(cdr.GetType() == typeof(CCCons))
             {
-                return car.ToString() + " " + (cdr as CCCons).ToStringCont();
+                return carstr + " " + (cdr as CCCons).ToStringCont();
             }
             else
             {
-                return car.ToString() + " . " + cdr.ToString();
+                return carstr + " . " + cdr.ToString();
             }
         }
     }
@@ -119,14 +121,6 @@ namespace CCLisp.Model
         }
     }
 
-    public class CCNil : CCObject
-    {
-        public override string ToString()
-        {
-            return "nil";
-        }
-    }
-
     public class CCIS : CCObject
     {
         public string Inst;
@@ -141,29 +135,4 @@ namespace CCLisp.Model
             return "[IS:" + Inst + "]";
         }
     }
-
-    //public class CCISAP : CCObject
-    //{
-    //    public override string ToString()
-    //    {
-    //        return "[IS:AP]";
-    //    }
-    //}
-
-    //public class CCISIF : CCObject
-    //{
-    //    public override string ToString()
-    //    {
-    //        return "[IS:IF]";
-    //    }
-    //}
-
-    //public class CCISHALT : CCObject
-    //{
-    //    public override string ToString()
-    //    {
-    //        return "[IS:HALT]";
-    //    }
-    //}
-
 }

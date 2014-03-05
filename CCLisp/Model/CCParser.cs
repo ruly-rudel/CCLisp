@@ -13,7 +13,7 @@ namespace CCLisp.Model
 
         private CCParenL ParenL = new CCParenL();
         private CCParenR ParenR = new CCParenR();
-        private CCNil Nil = new CCNil();
+//        private CCNil Nil = new CCNil();
 
         public IEnumerable<CCObject> Read(StringReader sr)
         {
@@ -57,10 +57,10 @@ namespace CCLisp.Model
         {
             if (ts.Current == ParenR) // end of list
             {
-                return Nil;
+                return null;
             }
 
-            var list = new CCCons(Nil, Nil);
+            var list = new CCCons(null, null);
             if (ts.Current == ParenL)
             {
                 list.car = ParseList(ts);
@@ -183,7 +183,7 @@ namespace CCLisp.Model
             {
                 if (sb.ToString() == "nil")
                 {
-                    return Nil;
+                    return null;
                 }
                 else
                 {
