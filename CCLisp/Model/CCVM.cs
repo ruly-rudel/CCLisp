@@ -8,9 +8,6 @@ namespace CCLisp.Model
 {
     public class CCVM
     {
-        // single oblects (must make it singleton?
-        //private CCNil    Nil    = new CCNil();
-
         private string[] Builtin = {"+", "-", "*", "/", "car", "cdr", "cons", "eq", "<", ">", "<=", ">="};
 
         // evaluation environments
@@ -180,7 +177,8 @@ namespace CCLisp.Model
                             int x = (pos.car as CCInt).value;
                             int y = (pos.cdr as CCInt).value;
 
-                            SetEnvIndex(x, y, Stack);
+                            var set = Stack;
+                            SetEnvIndex(x, y, set);
                         }
                         return true;
 
@@ -467,27 +465,24 @@ namespace CCLisp.Model
         private void SetEnvIndex(int x, int y, CCObject v)
         {
             var env = _env as CCCons;
-            SetEnvIndex1(x, y, ref env, v);
-            _env = env;
+            SetEnvIndex1(x, y, env, v);
         }
 
-        private void SetEnvIndex1(int x, int y, ref CCCons env, CCObject v)
+        private void SetEnvIndex1(int x, int y, CCCons env, CCObject v)
         {
             if (x > 1)
             {
                 var cdr = env.cdr as CCCons;
-                SetEnvIndex1(x - 1, y, ref cdr, v);
-                env.cdr = cdr;
+                SetEnvIndex1(x - 1, y, cdr, v);
             }
             else
             {
                 var car = env.car as CCCons;
-                SetEnvIndex2(y, ref car, v);
-                env.car = car;
+                SetEnvIndex2(y, car, v);
             }
         }
 
-        private void SetEnvIndex2(int y, ref CCCons env, CCObject v)
+        private void SetEnvIndex2(int y, CCCons env, CCObject v)
         {
             if (y > 1)
             {
@@ -496,8 +491,7 @@ namespace CCLisp.Model
                 {
                     cdr = new CCCons(null, null);
                 }
-                SetEnvIndex2(y - 1, ref cdr, v);
-                env.cdr = cdr;
+                SetEnvIndex2(y - 1, cdr, v);
             }
             else
             {

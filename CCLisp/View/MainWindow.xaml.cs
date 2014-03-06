@@ -51,7 +51,8 @@ namespace CCLisp.View
                         var c = comp.Compile(i);
                         EvalResult.Text += c.ToString() + "\n";
                         vm.Eval(c);
-                        EvalResult.Text += vm.GetResult();
+                        var result = vm.GetResult();
+                        EvalResult.Text += result + "\n";
                     }
 
                 }
