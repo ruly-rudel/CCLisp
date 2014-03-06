@@ -1,4 +1,7 @@
 ﻿
+using System.Collections.Generic;
+using System.Linq;
+
 namespace CCLisp.Model
 {
     public abstract class CCObject
@@ -33,36 +36,78 @@ namespace CCLisp.Model
 
         public override string ToString()
         {
-            if (cdr == null)
+            var p = new List<CCCons>();
+            var r = new List<CCCons>();
+            return ToStringBegin(p, ref r);
+        }
+
+        public string ToStringBegin(List<CCCons> p, ref List<CCCons> r)
+        {
+            // existence check
+            var s = p.IndexOf(this);
+            if (s >= 0)
             {
-                return "(" + (car == null ? "nil" : car.ToString()) + ")";
-            }
-            else if(cdr.GetType() == typeof(CCCons))
-            {
-                return "(" + (car == null ? "nil" : car.ToString()) + " " + (cdr as CCCons).ToStringCont();
+                r.Add(this);
+                return "#" + s.ToString();
             }
             else
             {
-                return "(" + (car == null ? "nil" : car.ToString()) + " . " + cdr.ToString() + ")";
+                var ret = ToStringCont(p, ref r);
+                var ss = r.IndexOf(this);
+                if (ss >= 0)
+                {
+                    var i = p.IndexOf(this);
+                    return "#" + i.ToString() + "=(" + ret;
+                }
+                else
+                {
+                    return "(" + ret;
+                }
             }
         }
 
-        public string ToStringCont()
+        public string ToStringCont(List<CCCons> p, ref List<CCCons> r)
         {
-            var carstr = car == null ? "nil" : car.ToString();
+            var ret = "";
 
-            if(cdr == null) 
+            // existence check
+            var s = p.IndexOf(this);
+            if (s >= 0)
             {
-                return carstr + ")";
+                r.Add(this);
+                return "#" + s.ToString();
             }
-            else if(cdr.GetType() == typeof(CCCons))
+            p.Add(this);
+
+            // print car
+            if(car == null)
             {
-                return carstr + " " + (cdr as CCCons).ToStringCont();
+                ret += "nil";
+            }
+            else if(car.GetType() == typeof(CCCons))
+            {
+                ret += (car as CCCons).ToStringBegin(p, ref r);
             }
             else
             {
-                return carstr + " . " + cdr.ToString();
+                ret += car.ToString();
             }
+
+            // print cdr
+            if (cdr == null)
+            {
+                ret += ")";
+            }
+            else if (cdr.GetType() == typeof(CCCons))
+            {
+                ret += " " + (cdr as CCCons).ToStringCont(p, ref r);
+            }
+            else
+            {
+                ret += " . " + cdr.ToString() + ")";
+            }
+
+            return ret;
         }
     }
 
@@ -91,18 +136,6 @@ namespace CCLisp.Model
         public override string ToString()
         {
             return Name;
-        }
-
-        public override bool Equals(object obj)
-        {
-            if (obj.GetType() == typeof(CCIdentifier))
-            {
-                return (obj as CCIdentifier).Name.Equals(Name);
-            }
-            else
-            {
-                return false;
-            }
         }
     }
 

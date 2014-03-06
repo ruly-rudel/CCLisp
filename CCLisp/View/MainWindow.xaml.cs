@@ -49,10 +49,10 @@ namespace CCLisp.View
                     foreach (var i in obj)
                     {
                         var c = comp.Compile(i);
-                        EvalResult.Text += c.ToString() + "\n";
+                        EvalResult.Text += "Compile result:\n" + c.ToString() + "\n\n";
                         vm.Eval(c);
                         var result = vm.GetResult();
-                        EvalResult.Text += result + "\n";
+                        EvalResult.Text += "evaluated value:\n" + result + "\n\n";
                     }
 
                 }

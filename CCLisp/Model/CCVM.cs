@@ -179,6 +179,7 @@ namespace CCLisp.Model
 
                             var set = Stack;
                             SetEnvIndex(x, y, set);
+                            Stack = set;
                         }
                         return true;
 
