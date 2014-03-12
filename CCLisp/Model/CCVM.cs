@@ -491,6 +491,7 @@ namespace CCLisp.Model
                 if (cdr == null)
                 {
                     cdr = new CCCons(null, null);
+                    env.cdr = cdr;
                 }
                 SetEnvIndex2(y - 1, cdr, v);
             }
