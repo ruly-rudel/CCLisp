@@ -32,8 +32,8 @@ namespace CCLisp.View
             InitializeComponent();
 
             parser = new CCParser();
-            comp = new CCCompiler();
             vm = new CCVM();
+            comp = new CCCompiler(vm);
         }
 
         private void Eval_Click(object sender, RoutedEventArgs e)

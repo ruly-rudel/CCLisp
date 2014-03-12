@@ -10,11 +10,15 @@ namespace CCLisp.Model
     {
         private string[] Builtin = { "+", "-", "*", "/", "car", "cdr", "cons", "eq", "<", ">", "<=", ">=" };
 
-        private CCCons symbols;
+        private CCCons fn_symbols;
+        private CCCons mc_symbols;
+        private CCVM vm;
 
-        public CCCompiler()
+        public CCCompiler(CCVM v)
         {
-            symbols = new CCCons(null, null);
+            fn_symbols = new CCCons(null, null);
+            mc_symbols = new CCCons(null, null);
+            vm = v;
         }
 
 
@@ -22,7 +26,7 @@ namespace CCLisp.Model
         {
             var cont = new CCCons(new CCIS("HALT"), null);
 
-            return Compile1(obj, new CCCons(symbols, null), cont);
+            return Compile1(obj, new CCCons(fn_symbols, new CCCons(mc_symbols, null)), cont);
         }
 
         private CCObject Compile1(CCObject exp, CCCons env, CCObject cont)
@@ -98,7 +102,7 @@ namespace CCLisp.Model
                         if (pos == null)
                         {
                             // create new symbol(root environment)
-                            CCCons i = symbols;
+                            CCCons i = fn_symbols;
                             while (i.cdr != null)
                                 i = i.cdr as CCCons;
 
@@ -117,11 +121,53 @@ namespace CCLisp.Model
                         }
 
                         return Compile1(value, env, new CCCons(new CCIS("ST"), new CCCons(pos, cont)));
-                        //return new CCCons(new CCIS("ST"), new CCCons(pos, Compile1(value, env, cont)));
                     }
-                    else
+                    else if(fn.Name == "defmacro")  // defmacro
                     {
-                        return new CCCons(null, CompileApp(args, env, new CCCons(new CCIS("LD"), new CCCons(Index(fcn as CCIdentifier, env), new CCCons(new CCIS("AP"), cont)))));
+                        var argsc = args as CCCons;
+
+                        var symbol = argsc.car as CCIdentifier;
+                        var margs = argsc.cadr;
+                        var mbody = argsc.caddr;
+
+                        var pos = Index(symbol, env);
+                        if (pos == null)
+                        {
+                            // create new symbol(root environment)
+                            CCCons i = mc_symbols;
+                            while (i.cdr != null)
+                                i = i.cdr as CCCons;
+
+                            if (i.car == null)
+                            {
+                                i.car = symbol;
+                            }
+                            else
+                            {
+                                var cons = new CCCons(symbol, null);
+                                i.cdr = cons;
+                            }
+
+                            // re-find index
+                            pos = Index(symbol, env);
+                        }
+
+                        return CompileLambda(mbody, new CCCons(margs, env), new CCCons(new CCIS("ST"), new CCCons(pos, cont)));
+                    }
+                    else // application or macro
+                    {
+                        // check if it is macro or not
+                        if (Index2(fcn as CCIdentifier, mc_symbols, 1) != -1)
+                        {   // macro expansion compile
+                            var expand_code = new CCCons(new CCIS("LDC"), new CCCons(args, new CCCons(new CCIS("LD"), new CCCons(Index(fcn as CCIdentifier, env), new CCCons(new CCIS("AP"), new CCCons(new CCIS("HALT"), null))))));
+                            vm.Eval(expand_code);
+                            var r = vm.GetResult();
+                            return Compile1(r, env, cont);
+                        }
+                        else // normal application
+                        {
+                            return new CCCons(null, CompileApp(args, env, new CCCons(new CCIS("LD"), new CCCons(Index(fcn as CCIdentifier, env), new CCCons(new CCIS("AP"), cont)))));
+                        }
                     }
                 }
                 else // application with nested function

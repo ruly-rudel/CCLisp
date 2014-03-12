@@ -121,9 +121,9 @@ namespace CCLisp.Model
             code = null;
             dump = null;
 
-            // make special symbol t
+            // make function and macro environments
 
-            _env = new CCCons(new CCCons(null, null), null);
+            _env = new CCCons(new CCCons(null, null), new CCCons(new CCCons(null, null), null));
         }
 
 
