@@ -14,7 +14,7 @@ namespace CCLisp.Model
         private CCParenL ParenL = new CCParenL();
         private CCParenR ParenR = new CCParenR();
 
-        public IEnumerable<CCObject> Read(StringReader sr)
+        public IEnumerable<CCObject> Read(TextReader sr)
         {
             return Parse(Scan(sr));
         }

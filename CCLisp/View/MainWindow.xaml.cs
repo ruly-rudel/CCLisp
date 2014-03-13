@@ -28,6 +28,10 @@ namespace CCLisp.View
         private CCCompiler comp;
         private CCVM vm;
 
+        private static string Init = "Assets\\init.l";
+        private static string Init_core = "Assets\\init.core";
+
+
         public MainWindow()
         {
             InitializeComponent();
@@ -35,6 +39,24 @@ namespace CCLisp.View
             parser = new CCParser();
             vm = new CCVM();
             comp = new CCCompiler(vm);
+
+            InitEnv();
+        }
+
+        private void InitEnv()
+        {
+            if(File.Exists(Init_core)) {
+                vm.LoadCore(Init_core);
+                comp.LoadSymbol(Init_core);
+            } else {
+                EvalResult.Text = "";
+                using (var sr = new StreamReader(Init))
+                {
+                    ReadEvalPrint(sr);
+                }
+                vm.SaveCore(Init_core);
+                comp.SaveSymbol(Init_core);
+            }
         }
 
         private void Eval_Click(object sender, RoutedEventArgs e)
@@ -42,26 +64,32 @@ namespace CCLisp.View
             EvalResult.Text = "";
             using (var sr = new StringReader(EvalText.Text))
             {
-                IEnumerable<CCObject> obj;
-                try
-                {
-                    obj = parser.Read(sr);
-
-                    foreach (var i in obj)
-                    {
-                        var c = comp.Compile(i);
-                        EvalResult.Text += "Compile result:\n" + c.ToString() + "\n\n";
-                        vm.Eval(c);
-                        var result = vm.GetResult();
-                        EvalResult.Text += "evaluated value:\n" + result + "\n\n";
-                    }
-
-                }
-                catch(CCException ex)
-                {
-                    EvalResult.Text += ex.Message;
-                }
+                ReadEvalPrint(sr);
             }
+        }
+
+        private void ReadEvalPrint(TextReader sr)
+        {
+            IEnumerable<CCObject> obj;
+            try
+            {
+                obj = parser.Read(sr);
+
+                foreach (var i in obj)
+                {
+                    var c = comp.Compile(i);
+                    EvalResult.Text += "Compile result:\n" + c.ToString() + "\n\n";
+                    vm.Eval(c);
+                    var result = vm.GetResult();
+                    EvalResult.Text += "evaluated value:\n" + result + "\n\n";
+                }
+
+            }
+            catch (CCException ex)
+            {
+                EvalResult.Text += ex.Message;
+            }
+
         }
 
 
@@ -98,5 +126,23 @@ namespace CCLisp.View
         {
             Close();
         }
+
+        private void MenuFileCompileFile_Click(object sender, RoutedEventArgs e)
+        {
+            var ofd = new OpenFileDialog();
+            ofd.Filter = "Lisp Code (.l)| *.l";
+            ofd.Multiselect = false;
+            bool? result = ofd.ShowDialog();
+
+            if (result == true)
+            {
+                EvalResult.Text = "";
+                using(var sr = new StreamReader(ofd.FileName))
+                {
+                    ReadEvalPrint(sr);
+                }
+            }
+        }
+
     }
 }

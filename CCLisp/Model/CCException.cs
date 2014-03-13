@@ -22,19 +22,8 @@ namespace CCLisp.Model
         }
     }
 
-    public class CCRuntimeSymbolCannotEvalException : CCRuntimeException
+    public class CCCompileIdentifierNotFoundException : CCException
     {
-        public CCRuntimeSymbolCannotEvalException(CCObject stack, CCObject env, CCObject code, CCObject dump) : base(stack, env, code, dump) { }
-    }
-
-    public class CCRuntimeSymbolValueIsNotBoundException : CCRuntimeException
-    {
-        public CCRuntimeSymbolValueIsNotBoundException(CCObject stack, CCObject env, CCObject code, CCObject dump) : base(stack, env, code, dump) { }
-    }
-
-    public class CCRuntimeSymbolIsNotFoundException : CCRuntimeException
-    {
-        public CCRuntimeSymbolIsNotFoundException(CCObject stack, CCObject env, CCObject code, CCObject dump) : base(stack, env, code, dump) { }
     }
 
     public class CCParserException : CCException

@@ -40,6 +40,9 @@ namespace CCLisp.Model
             IFormatter formatter = new BinaryFormatter();
             Stream stream = new FileStream(filename + ".s", FileMode.Open, FileAccess.Read, FileShare.Read);
             root_env = (CCCons)formatter.Deserialize(stream);
+            fn_symbols = root_env.car as CCCons;
+            mc_symbols = root_env.cadr as CCCons;
+
             stream.Close();
         }
 
@@ -66,7 +69,14 @@ namespace CCLisp.Model
                 else // identifier
                 {
                     var ij = Index(exp as CCIdentifier, env);
+                    if (ij == null)
+                    {
+                        throw new CCCompileIdentifierNotFoundException();
+                    }
+                    else
+                    {
                         return new CCCons(new CCIS("LD"), new CCCons(ij, cont));
+                    }
                 }
             }
             else // apply
