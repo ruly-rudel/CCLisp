@@ -47,12 +47,26 @@ namespace CCLisp.Model
                     throw new CCParserException();
                 }
 
-                return new CCCons(new CCIdentifier() { Name = "quote" }, new CCCons(ParseBasicForm(ts), null));
+                return QuoteObject(ParseBasicForm(ts));
+            }
+            else if(ts.Current == BackQuote)
+            {
+                if (!ts.MoveNext()) // to body
+                {
+                    throw new CCParserException();
+                }
+
+                return ParseBackQuotedBasicForm(ts);
             }
             else
             {
                 return ts.Current;
             }
+        }
+
+        private CCObject QuoteObject(CCObject obj)
+        {
+            return new CCCons(new CCIdentifier() { Name = "quote" }, new CCCons(obj, null));
         }
 
         private CCObject ParseList(IEnumerator<CCObject> ts)
@@ -81,6 +95,66 @@ namespace CCLisp.Model
                 throw new CCParserException();
             }
             list.cdr = ParseListContinue(ts);
+
+            return list;
+        }
+
+
+        private CCObject ParseBackQuotedBasicForm(IEnumerator<CCObject> ts)
+        {
+            if (ts.Current == ParenL)
+            {
+                return ParseBackQuotedList(ts);
+            }
+            else if (ts.Current == Comma)
+            {
+                if (!ts.MoveNext()) // to body
+                {
+                    throw new CCParserException();
+                }
+
+                if (ts.Current == Atmark)
+                {
+                    throw new NotImplementedException();
+                }
+                else
+                {
+                    return ts.Current;
+                }
+            }
+            else
+            {
+                return QuoteObject(ts.Current);
+            }
+        }
+
+        private CCObject ParseBackQuotedList(IEnumerator<CCObject> ts)
+        {
+            if (!ts.MoveNext()) // to car
+            {
+                // no car exists
+                throw new CCParserException();
+            }
+            return ParseBackQuotedListContinue(ts);
+        }
+
+        private CCObject ParseBackQuotedListContinue(IEnumerator<CCObject> ts)
+        {
+            if (ts.Current == ParenR) // end of list
+            {
+                return null;
+            }
+
+            var list3 = new CCCons(null, null);
+            var list2 = new CCCons(ParseBackQuotedBasicForm(ts), list3);
+            var list = new CCCons(new CCIdentifier() { Name = "cons" }, list2);
+
+            if (!ts.MoveNext()) // to cdr
+            {
+                // no cdr exists
+                throw new CCParserException();
+            }
+            list3.car = ParseBackQuotedListContinue(ts);
 
             return list;
         }

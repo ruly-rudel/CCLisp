@@ -71,7 +71,8 @@ namespace CCLisp.Model
                     var ij = Index(exp as CCIdentifier, env);
                     if (ij == null)
                     {
-                        throw new CCCompileIdentifierNotFoundException();
+                        //throw new CCCompileIdentifierNotFoundException();
+                        return new CCCons(new CCIS("LD"), new CCCons(ij, cont));
                     }
                     else
                     {
