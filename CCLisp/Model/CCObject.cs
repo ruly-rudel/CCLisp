@@ -172,6 +172,41 @@ namespace CCLisp.Model
         }
     }
 
+    public class CCQuote : CCObject
+    {
+        public override string ToString()
+        {
+            return "'";
+        }
+    }
+
+    public class CCBackQuote : CCObject
+    {
+        public override string ToString()
+        {
+            return "`";
+        }
+    }
+
+    public class CCComma : CCObject
+    {
+        public override string ToString()
+        {
+            return ",";
+        }
+    }
+
+    public class CCAtmark : CCObject
+    {
+        public override string ToString()
+        {
+            return "@";
+        }
+    }
+
+
+
+
     [Serializable]
     public class CCIS : CCObject
     {

@@ -9,10 +9,14 @@ namespace CCLisp.Model
 {
     class CCParser
     {
-        private string SpecialChar = "()";
+        private string SpecialChar = "(),'`@";
 
         private CCParenL ParenL = new CCParenL();
         private CCParenR ParenR = new CCParenR();
+        private CCQuote  Quote = new CCQuote();
+        private CCBackQuote BackQuote = new CCBackQuote();
+        private CCComma Comma = new CCComma();
+        private CCAtmark Atmark = new CCAtmark();
 
         public IEnumerable<CCObject> Read(TextReader sr)
         {
@@ -35,6 +39,15 @@ namespace CCLisp.Model
             if (ts.Current == ParenL)
             {
                 return ParseList(ts);
+            }
+            else if(ts.Current == Quote)
+            {
+                if (!ts.MoveNext()) // to body
+                {
+                    throw new CCParserException();
+                }
+
+                return new CCCons(new CCIdentifier() { Name = "quote" }, new CCCons(ParseBasicForm(ts), null));
             }
             else
             {
@@ -60,14 +73,7 @@ namespace CCLisp.Model
             }
 
             var list = new CCCons(null, null);
-            if (ts.Current == ParenL)
-            {
-                list.car = ParseList(ts);
-            }
-            else
-            {
-                list.car = ts.Current;
-            }
+            list.car = ParseBasicForm(ts);
 
             if (!ts.MoveNext()) // to cdr
             {
@@ -105,6 +111,22 @@ namespace CCLisp.Model
                         else if (c == ')')
                         {
                             yield return ParenR;
+                        }
+                        else if(c == '\'')
+                        {
+                            yield return Quote;
+                        }
+                        else if (c == '`')
+                        {
+                            yield return BackQuote;
+                        }
+                        else if (c == ',')
+                        {
+                            yield return Comma;
+                        }
+                        else if (c == '@')
+                        {
+                            yield return Atmark;
                         }
                         else
                         {
