@@ -2,6 +2,8 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Runtime.Serialization;
+using System.Runtime.Serialization.Formatters.Binary;
 using System.Text;
 
 namespace CCLisp.Model
@@ -142,6 +144,22 @@ namespace CCLisp.Model
             return Stack;
         }
 
+        public void SaveCore(string filename)
+        {
+            IFormatter formatter = new BinaryFormatter();
+
+            Stream stream = new FileStream(filename, FileMode.Create, FileAccess.Write, FileShare.None);
+            formatter.Serialize(stream, _env);
+            stream.Close();
+        }
+
+        public void LoadCore(string filename)
+        {
+            IFormatter formatter = new BinaryFormatter();
+            Stream stream = new FileStream(filename, FileMode.Open, FileAccess.Read, FileShare.Read);
+            _env = (CCObject)formatter.Deserialize(stream);
+            stream.Close();
+        }
 
         // private functions
         private bool EvalTop()

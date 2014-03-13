@@ -1,6 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
+using System.Runtime.Serialization;
+using System.Runtime.Serialization.Formatters.Binary;
 using System.Text;
 using System.Threading.Tasks;
 
@@ -12,13 +15,32 @@ namespace CCLisp.Model
 
         private CCCons fn_symbols;
         private CCCons mc_symbols;
+        private CCCons root_env;
         private CCVM vm;
 
         public CCCompiler(CCVM v)
         {
             fn_symbols = new CCCons(null, null);
             mc_symbols = new CCCons(null, null);
+            root_env = new CCCons(fn_symbols, new CCCons(mc_symbols, null));
             vm = v;
+        }
+
+        public void SaveSymbol(string filename)
+        {
+            IFormatter formatter = new BinaryFormatter();
+
+            Stream stream = new FileStream(filename + ".s", FileMode.Create, FileAccess.Write, FileShare.None);
+            formatter.Serialize(stream, root_env);
+            stream.Close();
+        }
+
+        public void LoadSymbol(string filename)
+        {
+            IFormatter formatter = new BinaryFormatter();
+            Stream stream = new FileStream(filename + ".s", FileMode.Open, FileAccess.Read, FileShare.Read);
+            root_env = (CCCons)formatter.Deserialize(stream);
+            stream.Close();
         }
 
 
@@ -26,7 +48,7 @@ namespace CCLisp.Model
         {
             var cont = new CCCons(new CCIS("HALT"), null);
 
-            return Compile1(obj, new CCCons(fn_symbols, new CCCons(mc_symbols, null)), cont);
+            return Compile1(obj, root_env, cont);
         }
 
         private CCObject Compile1(CCObject exp, CCCons env, CCObject cont)

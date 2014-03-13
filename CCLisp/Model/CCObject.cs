@@ -1,13 +1,16 @@
 ﻿
+using System;
 using System.Collections.Generic;
 using System.Linq;
 
 namespace CCLisp.Model
 {
+    [Serializable]
     public abstract class CCObject
     {
     }
 
+    [Serializable]
     public class CCCons : CCObject
     {
         public CCObject car { get; set; }
@@ -111,6 +114,7 @@ namespace CCLisp.Model
         }
     }
 
+    [Serializable]
     public class CCT : CCObject
     {
         public override string ToString()
@@ -119,6 +123,7 @@ namespace CCLisp.Model
         }
     }
 
+    [Serializable]
     public class CCInt : CCObject
     {
         public int value { get; set; }
@@ -129,6 +134,7 @@ namespace CCLisp.Model
         }
     }
 
+    [Serializable]
     public class CCIdentifier : CCObject
     {
         public string Name { get; set; }
@@ -166,6 +172,7 @@ namespace CCLisp.Model
         }
     }
 
+    [Serializable]
     public class CCIS : CCObject
     {
         public string Inst;

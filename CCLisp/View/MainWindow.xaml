@@ -9,7 +9,14 @@
             <RowDefinition Height="96" />
             <RowDefinition Height="24" />
         </Grid.RowDefinitions>
-        <Menu Grid.Row="0"/>
+        <Menu Grid.Row="0">
+            <MenuItem Header="File">
+                <MenuItem x:Name="MenuFileLoad" Header="Load" HorizontalAlignment="Left" Width="150" Click="MenuFileLoad_Click"/>
+                <MenuItem x:Name="MenuFileSave" Header="Save" HorizontalAlignment="Left" Width="150" Click="MenuFileSave_Click"/>
+                <Separator HorizontalAlignment="Left" Width="150"/>
+                <MenuItem x:Name="MenuFileQuit" Header="Quit" HorizontalAlignment="Left" Width="150" Click="MenuFileQuit_Click"/>
+            </MenuItem>
+        </Menu>
         <TextBox Grid.Row="1" x:Name="EvalResult" TextWrapping="Wrap" VerticalScrollBarVisibility="Auto" />
         <Grid Grid.Row="2">
             <Grid.ColumnDefinitions>

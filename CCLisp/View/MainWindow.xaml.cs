@@ -15,6 +15,7 @@ using System.Windows.Shapes;
 
 using CCLisp.Model;
 using System.IO;
+using Microsoft.Win32;
 
 namespace CCLisp.View
 {
@@ -61,6 +62,41 @@ namespace CCLisp.View
                     EvalResult.Text += ex.Message;
                 }
             }
+        }
+
+
+        private void MenuFileLoad_Click(object sender, RoutedEventArgs e)
+        {
+            var ofd = new OpenFileDialog();
+            ofd.Filter = "Lisp Core (.core)| *.core";
+            ofd.Multiselect = false;
+            bool? result = ofd.ShowDialog();
+
+            if (result == true)
+            {
+                vm.LoadCore(ofd.FileName);
+                comp.LoadSymbol(ofd.FileName);
+            }
+        }
+
+        private void MenuFileSave_Click(object sender, RoutedEventArgs e)
+        {
+            var sfd = new SaveFileDialog();
+            sfd.Filter = "Lisp Core (.core)| *.core";
+
+            bool? result = sfd.ShowDialog();
+
+            if (result == true)
+            {
+                vm.SaveCore(sfd.FileName);
+                comp.SaveSymbol(sfd.FileName);
+            }
+
+        }
+
+        private void MenuFileQuit_Click(object sender, RoutedEventArgs e)
+        {
+            Close();
         }
     }
 }
