@@ -76,11 +76,7 @@ namespace CCLisp.Model
                 // no car exists
                 throw new CCParserException();
             }
-            return ParseListContinue(ts);
-        }
 
-        private CCObject ParseListContinue(IEnumerator<CCObject> ts)
-        {
             if (ts.Current == ParenR) // end of list
             {
                 return null;
@@ -88,13 +84,7 @@ namespace CCLisp.Model
 
             var list = new CCCons(null, null);
             list.car = ParseBasicForm(ts);
-
-            if (!ts.MoveNext()) // to cdr
-            {
-                // no cdr exists
-                throw new CCParserException();
-            }
-            list.cdr = ParseListContinue(ts);
+            list.cdr = ParseList(ts);
 
             return list;
         }
@@ -135,11 +125,7 @@ namespace CCLisp.Model
                 // no car exists
                 throw new CCParserException();
             }
-            return ParseBackQuotedListContinue(ts);
-        }
 
-        private CCObject ParseBackQuotedListContinue(IEnumerator<CCObject> ts)
-        {
             if (ts.Current == ParenR) // end of list
             {
                 return null;
@@ -148,17 +134,14 @@ namespace CCLisp.Model
             var list3 = new CCCons(null, null);
             var list2 = new CCCons(ParseBackQuotedBasicForm(ts), list3);
             var list = new CCCons(new CCIdentifier() { Name = "cons" }, list2);
-
-            if (!ts.MoveNext()) // to cdr
-            {
-                // no cdr exists
-                throw new CCParserException();
-            }
-            list3.car = ParseBackQuotedListContinue(ts);
+            list3.car = ParseBackQuotedList(ts);
 
             return list;
         }
 
+        //
+        // scanner
+        //
         private IEnumerator<CCObject> Scan(TextReader cs)
         {
             while (cs.Peek() != -1)
