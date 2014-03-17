@@ -11,8 +11,6 @@ namespace CCLisp.Model
 {
     class CCCompiler
     {
-        private string[] Builtin = { "+", "-", "*", "/", "car", "cdr", "cons", "eq", "<", ">", "<=", ">=" };
-
         private CCCons fn_symbols;
         private CCCons mc_symbols;
         private CCCons root_env;
@@ -88,7 +86,7 @@ namespace CCLisp.Model
                 if (fcn.GetType() != typeof(CCCons)) // apply function is a builtin, lambda or special form
                 {
                     var fn = fcn as CCIdentifier;
-                    var name = from x in Builtin where x == fn.Name select x;
+                    var name = from x in CCVM.Builtin where x == fn.Name select x;
                     if (name.Count() == 1)  // builtin
                     {
                         return CompileBuiltin(args, env, new CCCons(fcn, cont));

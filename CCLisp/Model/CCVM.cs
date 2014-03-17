@@ -10,7 +10,7 @@ namespace CCLisp.Model
 {
     public class CCVM
     {
-        private string[] Builtin = {"+", "-", "*", "/", "car", "cdr", "cons", "eq", "<", ">", "<=", ">="};
+        public static string[] Builtin = {"+", "-", "*", "/", "car", "cdr", "cons", "eq", "<", ">", "<=", ">="};
 
         // evaluation environments
         private CCObject stack;
