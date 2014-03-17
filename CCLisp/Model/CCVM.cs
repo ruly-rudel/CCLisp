@@ -8,140 +8,77 @@ using System.Text;
 
 namespace CCLisp.Model
 {
+    public class CCStack
+    {
+        public CCCons Stack { get; set; }
+        public CCObject Top
+        {
+            get
+            {
+                return Stack.car;
+            }
+        }
+
+        public CCStack()
+        {
+            Stack = null;
+        }
+
+        public void Push(CCObject val)
+        {
+            Stack = new CCCons(val, Stack);
+        }
+
+        public CCObject Pop()
+        {
+            var ret = Top;
+            Stack = Stack.cdr as CCCons;
+            return ret;
+        }
+
+        public void Clear()
+        {
+            Stack = null;
+        }
+    }
+
     public class CCVM
     {
         public static string[] Builtin = {"+", "-", "*", "/", "car", "cdr", "cons", "eq", "<", ">", "<=", ">="};
 
         // evaluation environments
-        private CCObject stack;
-        private CCObject Stack
-        {
-            get
-            {
-                if (stack == null)
-                {
-                    return null;
-                }
-                else
-                {
-                    var top = stack as CCCons;
-                    stack = top.cdr;
-                    return top.car;
-                }
-            }
-
-            set
-            {
-                var top = new CCCons(value, stack);
-                stack = top;
-            }
-        }
-
-        private CCObject _env;
-        private CCObject Env
-        {
-            get
-            {
-                if (_env == null)
-                {
-                    return null;
-                }
-                else
-                {
-                    var top = _env as CCCons;
-                    _env = top.cdr;
-                    return top.car;
-                }
-            }
-
-            set
-            {
-                var top = new CCCons(value, _env);
-                _env = top;
-            }
-        }
-
-        private CCObject code;
-        private CCObject Code
-        {
-            get
-            {
-                if (code == null)
-                {
-                    return null;
-                }
-                else if(code.GetType() == typeof(CCCons))
-                {
-                    var top = code as CCCons;
-                    code = top.cdr;
-                    return top.car;
-                }
-                else
-                {
-                    var top = code;
-                    code = null;
-                    return top;
-                }
-            }
-
-            set
-            {
-                var top = new CCCons(value, code);
-                code = top;
-            }            
-        }
-
-        private CCObject dump;
-        private CCObject Dump
-        {
-            get
-            {
-                if (dump == null)
-                {
-                    return null;
-                }
-                else
-                {
-                    var top = dump as CCCons;
-                    dump = top.cdr;
-                    return top.car;
-                }
-            }
-
-            set
-            {
-                var top = new CCCons(value, dump);
-                dump = top;
-            }
-        }
+        private CCStack Stack;
+        private CCStack Env;
+        private CCStack Code;
+        private CCStack Dump;
 
         public CCVM()
         {
             // clear environment
-            stack = null;
-            _env = null;
-            code = null;
-            dump = null;
+            Stack = new CCStack();
+            Env = new CCStack();
+            Code = new CCStack();
+            Dump = new CCStack();
 
             // make function and macro environments
-
-            _env = new CCCons(new CCCons(null, null), new CCCons(new CCCons(null, null), null));
+            Env.Push(new CCCons(null, null));   // global macro
+            Env.Push(new CCCons(null, null));   // global function or value
         }
 
 
 
         public void Eval(CCObject obj)
         {
-            stack = null;
-            code = obj;
-            dump = null;
+            Stack.Clear();
+            Code.Stack = obj as CCCons;
+            Dump.Clear();
             while (EvalTop()) ;
         }
 
 
         public CCObject GetResult()
         {
-            return Stack;
+            return Stack.Pop();
         }
 
         public void SaveCore(string filename)
@@ -149,7 +86,7 @@ namespace CCLisp.Model
             IFormatter formatter = new BinaryFormatter();
 
             Stream stream = new FileStream(filename, FileMode.Create, FileAccess.Write, FileShare.None);
-            formatter.Serialize(stream, _env);
+            formatter.Serialize(stream, Env.Stack);
             stream.Close();
         }
 
@@ -157,17 +94,17 @@ namespace CCLisp.Model
         {
             IFormatter formatter = new BinaryFormatter();
             Stream stream = new FileStream(filename, FileMode.Open, FileAccess.Read, FileShare.Read);
-            _env = (CCObject)formatter.Deserialize(stream);
+            Env.Stack = (CCCons)formatter.Deserialize(stream);
             stream.Close();
         }
 
         // private functions
         private bool EvalTop()
         {
-            var obj = Code;
+            var obj = Code.Pop();
             if (obj == null)
             {
-                Stack = null;
+                Stack.Push(null);
                 return true;
             }
             else if(obj.GetType() == typeof(CCIS))
@@ -176,121 +113,119 @@ namespace CCLisp.Model
                 switch(inst.Inst)
                 {
                     case "LDC":
-                        Stack = Code;
+                        Stack.Push(Code.Pop());
                         return true;
 
                     case "LD":
                         {
-                            var pos = Code as CCCons;
+                            var pos = Code.Pop() as CCCons;
                             int x = (pos.car as CCInt).value;
                             int y = (pos.cdr as CCInt).value;
 
-                            Stack = GetEnvIndex(x, y);
+                            Stack.Push(GetEnvIndex(x, y));
                         }
                         return true;
 
                     case "ST":
                         {
-                            var pos = Code as CCCons;
+                            var pos = Code.Pop() as CCCons;
                             int x = (pos.car as CCInt).value;
                             int y = (pos.cdr as CCInt).value;
 
-                            var set = Stack;
-                            SetEnvIndex(x, y, set);
-                            Stack = set;
+                            SetEnvIndex(x, y, Stack.Top);
                         }
                         return true;
 
                     case "CONS":
                         {
-                            var car = Stack;
-                            var cdr = Stack;
-                            Stack = new CCCons(car, cdr);
+                            var car = Stack.Pop();
+                            var cdr = Stack.Pop();
+                            Stack.Push(new CCCons(car, cdr));
                         }
                         return true;
 
                     case "SEL":
                         {
-                            var ct = Code;
-                            var cf = Code;
-                            var tf = Stack;
-                            Dump = code;
+                            var ct = Code.Pop();
+                            var cf = Code.Pop();
+                            var tf = Stack.Pop();
+                            Dump.Push(Code.Stack);
                             if (tf != null)
                             {
-                                code = ct;
+                                Code.Stack = ct as CCCons;
                             }
                             else
                             {
-                                code = cf;
+                                Code.Stack = cf as CCCons;
                             }
                         }
                         return true;
 
                     case "JOIN":
-                        code = Dump;
+                        Code.Stack = Dump.Pop() as CCCons;
                         return true;
 
                     case "LDF":
                         {
-                            var fn = Code;
-                            Stack = new CCCons(fn, _env);
+                            var fn = Code.Pop();
+                            Stack.Push(new CCCons(fn, Env.Stack));
                         }
                         return true;
 
                     case "AP":
                         {
                             // get closure and arguments
-                            var fe = Stack as CCCons;
-                            var v = Stack;
+                            var fe = Stack.Pop() as CCCons;
+                            var v = Stack.Pop();
 
                             // dump
-                            Dump = code;
-                            Dump = _env;
-                            Dump = stack;
+                            Dump.Push(Code.Stack);
+                            Dump.Push(Env.Stack);
+                            Dump.Push(Stack.Stack);
 
                             // apply
-                            stack = null;
-                            _env = fe.cdr;
-                            Env = v;
-                            code = fe.car;
+                            Stack.Clear();
+                            Env.Stack = fe.cdr as CCCons;
+                            Env.Push(v);
+                            Code.Stack = fe.car as CCCons;
                         }
                         return true;
 
                     case "RTN":
                         {
-                            var ret = Stack;
-                            stack = Dump;
-                            _env = Dump;
-                            code = Dump;
+                            var ret = Stack.Pop();
+                            Stack.Stack = Dump.Pop() as CCCons;
+                            Env.Stack = Dump.Pop() as CCCons;
+                            Code.Stack = Dump.Pop() as CCCons;
 
-                            Stack = ret;
+                            Stack.Push(ret);
                         }
                         return true;
 
                     case "DUM":
-                        Env = null;
+                        Env.Clear();
                         return true;
 
                     case "RAP":
                         {
                             // get closure and arguments
-                            var fe = Stack as CCCons;
-                            var v = Stack;
+                            var fe = Stack.Pop() as CCCons;
+                            var v = Stack.Pop();
 
                             var cl = fe.cdr as CCCons;
                             cl.car = v;
                             var dummy = Env;
 
                             // dump
-                            Dump = code;
-                            Dump = _env;
-                            Dump = stack;
+                            Dump.Push(Code.Stack);
+                            Dump.Push(Env.Stack);
+                            Dump.Push(Stack.Stack);
 
                             // apply
-                            stack = null;
-                            _env = fe.cdr;
-                            Env = v;
-                            code = fe.car;
+                            Stack.Clear();
+                            Env.Stack = fe.cdr as CCCons;
+                            Env.Push(v);
+                            Code.Stack = fe.car as CCCons;
                         }
                         return true;
 
@@ -308,137 +243,137 @@ namespace CCLisp.Model
                 {
                     case "+":
                         {
-                            var s1 = Stack as CCInt;
-                            var s2 = Stack as CCInt;
+                            var s1 = Stack.Pop() as CCInt;
+                            var s2 = Stack.Pop() as CCInt;
                             var ret = new CCInt();
                             ret.value = s1.value + s2.value;
-                            Stack = ret;
+                            Stack.Push(ret);
                         }
                         return true;
 
                     case "-":
                         {
-                            var s1 = Stack as CCInt;
-                            var s2 = Stack as CCInt;
+                            var s1 = Stack.Pop() as CCInt;
+                            var s2 = Stack.Pop() as CCInt;
                             var ret = new CCInt();
                             ret.value = s1.value - s2.value;
-                            Stack = ret;
+                            Stack.Push(ret);
                         }
                         return true;
 
                     case "*":
                         {
-                            var s1 = Stack as CCInt;
-                            var s2 = Stack as CCInt;
+                            var s1 = Stack.Pop() as CCInt;
+                            var s2 = Stack.Pop() as CCInt;
                             var ret = new CCInt();
                             ret.value = s1.value * s2.value;
-                            Stack = ret;
+                            Stack.Push(ret);
                         }
                         return true;
 
                     case "/":
                         {
-                            var s1 = Stack as CCInt;
-                            var s2 = Stack as CCInt;
+                            var s1 = Stack.Pop() as CCInt;
+                            var s2 = Stack.Pop() as CCInt;
                             var ret = new CCInt();
                             ret.value = s1.value / s2.value;
-                            Stack = ret;
+                            Stack.Push(ret);
                         }
                         return true;
 
                     case "cons":
                         {
-                            var car = Stack;
-                            var cdr = Stack;
-                            Stack = new CCCons(car, cdr);
+                            var car = Stack.Pop();
+                            var cdr = Stack.Pop();
+                            Stack.Push(new CCCons(car, cdr));
                         }
                         return true;
 
                     case "car":
                         {
-                            var cons = Stack as CCCons;
-                            Stack = cons.car;
+                            var cons = Stack.Pop() as CCCons;
+                            Stack.Push(cons.car);
                         }
                         return true;
 
                     case "cdr":
                         {
-                            var cons = Stack as CCCons;
-                            Stack = cons.cdr;
+                            var cons = Stack.Pop() as CCCons;
+                            Stack.Push(cons.cdr);
                         }
                         return true;
 
                     case "eq":
                         {
-                            var s1 = Stack;
-                            var s2 = Stack;
+                            var s1 = Stack.Pop();
+                            var s2 = Stack.Pop();
                             if (s1.Equals(s2))
                             {
-                                Stack = new CCT();
+                                Stack.Push(new CCT());
                             }
                             else
                             {
-                                Stack = null;
+                                Stack.Push(null);
                             }
                         }
                         return true;
 
                     case "<":
                         {
-                            var s1 = Stack as CCInt;
-                            var s2 = Stack as CCInt;
+                            var s1 = Stack.Pop() as CCInt;
+                            var s2 = Stack.Pop() as CCInt;
                             if (s1.value < s2.value)
                             {
-                                Stack = new CCT();
+                                Stack.Push(new CCT());
                             }
                             else
                             {
-                                Stack = null;
+                                Stack.Push(null);
                             }
                         }
                         return true;
 
                     case ">":
                         {
-                            var s1 = Stack as CCInt;
-                            var s2 = Stack as CCInt;
+                            var s1 = Stack.Pop() as CCInt;
+                            var s2 = Stack.Pop() as CCInt;
                             if (s1.value > s2.value)
                             {
-                                Stack = new CCT();
+                                Stack.Push(new CCT());
                             }
                             else
                             {
-                                Stack = null;
+                                Stack.Push(null);
                             }
                         }
                         return true;
 
                     case "<=":
                         {
-                            var s1 = Stack as CCInt;
-                            var s2 = Stack as CCInt;
+                            var s1 = Stack.Pop() as CCInt;
+                            var s2 = Stack.Pop() as CCInt;
                             if (s1.value <= s2.value)
                             {
-                                Stack = new CCT();
+                                Stack.Push(new CCT());
                             }
                             else
                             {
-                                Stack = null;
+                                Stack.Push(null);
                             }
                         }
                         return true;
 
                     case ">=":
                         {
-                            var s1 = Stack as CCInt;
-                            var s2 = Stack as CCInt;
+                            var s1 = Stack.Pop() as CCInt;
+                            var s2 = Stack.Pop() as CCInt;
                             if (s1.value >= s2.value)
                             {
-                                Stack = new CCT();
+                                Stack.Push(new CCT());
                             }
                             else
                             {
-                                Stack = null;
+                                Stack.Push(null);
                             }
                         }
                         return true;
@@ -454,7 +389,7 @@ namespace CCLisp.Model
 
         private CCObject GetEnvIndex(int x, int y)
         {
-            return GetEnvIndex1(x, y, _env);
+            return GetEnvIndex1(x, y, Env.Stack);
         }
 
         private CCObject GetEnvIndex1(int x, int y, CCObject env)
@@ -483,8 +418,7 @@ namespace CCLisp.Model
 
         private void SetEnvIndex(int x, int y, CCObject v)
         {
-            var env = _env as CCCons;
-            SetEnvIndex1(x, y, env, v);
+            SetEnvIndex1(x, y, Env.Stack, v);
         }
 
         private void SetEnvIndex1(int x, int y, CCCons env, CCObject v)
