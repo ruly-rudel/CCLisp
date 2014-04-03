@@ -187,7 +187,7 @@ namespace CCLisp.Model
                     else // application or macro
                     {
                         // check if it is macro or not
-                        if (Index2(fcn as CCIdentifier, mc_symbols, 1) != -1)
+                        if (Index2(fcn as CCIdentifier, mc_symbols, 1) != null)
                         {   // macro expansion compile
                             var expand_code = new CCCons(new CCIS("LDC"), new CCCons(args, new CCCons(new CCIS("LD"), new CCCons(Index(fcn as CCIdentifier, env), new CCCons(new CCIS("AP"), new CCCons(new CCIS("HALT"), null))))));
                             vm.Eval(expand_code);
@@ -261,28 +261,28 @@ namespace CCLisp.Model
             else
             {
                 var j = Index2(exp, env.car as CCCons, 1);
-                if (j < 0)
+                if (j == null)
                 {
                     return Index(exp, env.cdr as CCCons, i + 1);
                 }
                 else
                 {
-                    return new CCCons(new CCInt() { value = i }, new CCInt() { value = j });
+                    return new CCCons(new CCInt() { value = i }, j);
                 }
             }
         }
 
-        private int Index2(CCIdentifier exp, CCCons env, int j)
+        private CCObject Index2(CCIdentifier exp, CCCons env, int j)
         {
             if (env == null || env.car == null)
             {
-                return -1;
+                return null;
             }
             else
             {
                 if (env.car.ToString() == exp.ToString())
                 {
-                    return j;
+                    return new CCInt() { value = j };
                 }
                 else
                 {
