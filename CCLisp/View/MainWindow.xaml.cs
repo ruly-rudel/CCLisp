@@ -81,7 +81,14 @@ namespace CCLisp.View
                     EvalResult.Text += "Compile result:\n" + c.ToString() + "\n\n";
                     vm.Eval(c);
                     var result = vm.GetResult();
-                    EvalResult.Text += "evaluated value:\n" + result + "\n\n";
+                    if (result == null)
+                    {
+                        EvalResult.Text += "evaluated value:\nnil\n\n";
+                    }
+                    else
+                    {
+                        EvalResult.Text += "evaluated value:\n" + result + "\n\n";
+                    }
                 }
 
             }

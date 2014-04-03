@@ -44,7 +44,7 @@ namespace CCLisp.Model
 
     public class CCVM
     {
-        public static string[] Builtin = {"+", "-", "*", "/", "car", "cdr", "cons", "eq", "<", ">", "<=", ">="};
+        public static string[] Builtin = {"+", "-", "*", "/", "car", "cdr", "cons", "eq", "<", ">", "<=", ">=", "atom"};
 
         // evaluation environments
         private CCStack Stack;
@@ -377,6 +377,21 @@ namespace CCLisp.Model
                             }
                         }
                         return true;
+
+                    case "atom":
+                        {
+                            var s = Stack.Pop();
+                            if(s.GetType() == typeof(CCCons))
+                            {
+                                Stack.Push(null);
+                            }
+                            else
+                            {
+                                Stack.Push(new CCT());
+                            }
+
+                            return true;
+                        }
 
 
 
