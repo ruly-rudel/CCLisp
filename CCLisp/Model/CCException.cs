@@ -26,6 +26,10 @@ namespace CCLisp.Model
     {
     }
 
+    public class CCCompileInvalidFormalParameterException : CCException
+    {
+    }
+
     public class CCParserException : CCException
     {
     }

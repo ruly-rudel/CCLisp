@@ -29,6 +29,20 @@ namespace CCLisp.Model
                 return ((cdr as CCCons).cdr as CCCons).car;
             }
         }
+        public CCObject caar
+        {
+            get
+            {
+                return (car as CCCons).car;
+            }
+        }
+        public CCObject cdar
+        {
+            get
+            {
+                return (car as CCCons).cdr;
+            }
+        }
 
 
         public CCCons(CCObject a, CCObject d)

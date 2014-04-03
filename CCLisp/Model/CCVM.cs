@@ -126,6 +126,16 @@ namespace CCLisp.Model
                         }
                         return true;
 
+                    case "LDR":
+                        {
+                            var pos = Code.Pop() as CCCons;
+                            int x = (pos.car as CCInt).value;
+                            int y = (pos.cdr as CCInt).value;
+
+                            Stack.Push(GetEnvIndex(x, y, true));
+                        }
+                        return true;
+
                     case "ST":
                         {
                             var pos = Code.Pop() as CCCons;
@@ -402,32 +412,39 @@ namespace CCLisp.Model
 
         }
 
-        private CCObject GetEnvIndex(int x, int y)
+        private CCObject GetEnvIndex(int x, int y, bool is_rest = false)
         {
-            return GetEnvIndex1(x, y, Env.Stack);
+            return GetEnvIndex1(x, y, Env.Stack, is_rest);
         }
 
-        private CCObject GetEnvIndex1(int x, int y, CCObject env)
+        private CCObject GetEnvIndex1(int x, int y, CCObject env, bool is_rest)
         {
             if (x > 1)
             {
-                return GetEnvIndex1(x - 1, y, (env as CCCons).cdr);
+                return GetEnvIndex1(x - 1, y, (env as CCCons).cdr, is_rest);
             }
             else
             {
-                return GetEnvIndex2(y, (env as CCCons).car);
+                return GetEnvIndex2(y, (env as CCCons).car, is_rest);
             }
         }
 
-        private CCObject GetEnvIndex2(int y, CCObject env)
+        private CCObject GetEnvIndex2(int y, CCObject env, bool is_rest)
         {
             if(y > 1)
             {
-                return GetEnvIndex2(y - 1, (env as CCCons).cdr);
+                return GetEnvIndex2(y - 1, (env as CCCons).cdr, is_rest);
             }
             else
             {
-                return (env as CCCons).car;
+                if(is_rest)
+                {
+                    return env;
+                }
+                else
+                { 
+                    return (env as CCCons).car;
+                }
             }
         }
 

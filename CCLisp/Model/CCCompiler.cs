@@ -73,7 +73,22 @@ namespace CCLisp.Model
                     }
                     else
                     {
-                        return new CCCons(new CCIS("LD"), new CCCons(ij, cont));
+                        if (ij.cdr.GetType() == typeof(CCCons)) // parameter with additional information
+                        {
+                            if (ij.caddr.ToString() == "&rest")  // rest parameter
+                            {
+                                ij.cdr = ij.cadr;  // variable position
+                                return new CCCons(new CCIS("LDR"), new CCCons(ij, cont));
+                            }
+                            else
+                            {
+                                throw new CCCompileInvalidFormalParameterException();
+                            }
+                        }
+                        else
+                        {
+                            return new CCCons(new CCIS("LD"), new CCCons(ij, cont));
+                        }
                     }
                 }
             }
@@ -280,13 +295,27 @@ namespace CCLisp.Model
             }
             else
             {
-                if (env.car.ToString() == exp.ToString())
+                if(env.car.GetType() == typeof(CCCons)) // function or macro
                 {
-                    return new CCInt() { value = j };
+                    if (env.caar.ToString() == exp.ToString())
+                    {
+                        return new CCCons(new CCInt() { value = j }, env.cdar);
+                    }
+                    else
+                    {
+                        return Index2(exp, env.cdr as CCCons, j + 1);
+                    }
                 }
-                else
+                else // atom
                 {
-                    return Index2(exp, env.cdr as CCCons, j + 1);
+                    if (env.car.ToString() == exp.ToString())
+                    {
+                        return new CCInt() { value = j };
+                    }
+                    else
+                    {
+                        return Index2(exp, env.cdr as CCCons, j + 1);
+                    }
                 }
             }
         }
