@@ -1,2 +1,2 @@
-﻿(defmacro defun (name args body)
-	`(setf ,name (lambda ,args ,body)))
+﻿(defm defn (name args body)
+	`(set ,name (fn ,args ,body)))

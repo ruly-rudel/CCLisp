@@ -69,8 +69,7 @@ namespace CCLisp.Model
                     var ij = Index(exp as CCIdentifier, env);
                     if (ij == null)
                     {
-                        //throw new CCCompileIdentifierNotFoundException();
-                        return new CCCons(new CCIS("LD"), new CCCons(ij, cont));
+                        throw new CCCompileIdentifierNotFoundException();
                     }
                     else
                     {
@@ -91,7 +90,7 @@ namespace CCLisp.Model
                     {
                         return CompileBuiltin(args, env, new CCCons(fcn, cont));
                     }
-                    else if (fn.Name == "lambda") // lambda special form
+                    else if (fn.Name == "fn") // lambda special form
                     {
                         var argsc = args as CCCons;
                         return CompileLambda(argsc.cadr, new CCCons(argsc.car, env), cont);
@@ -111,18 +110,18 @@ namespace CCLisp.Model
 
                         if (fn.Name == "let") // let
                         {
-                            return new CCCons(null, CompileApp(values, env, CompileLambda(body, newn, new CCCons(new CCIS("AP"), cont))));
+                            return new CCCons(null, CompileApp(values as CCCons, env, CompileLambda(body, newn, new CCCons(new CCIS("AP"), cont))));
                         }
                         else // letrec
                         {
-                            return new CCCons(new CCIS("DUM"), new CCCons(null, CompileApp(values, newn, CompileLambda(body, newn, new CCCons(new CCIS("RAP"), cont)))));
+                            return new CCCons(new CCIS("DUM"), new CCCons(null, CompileApp(values as CCCons, newn, CompileLambda(body, newn, new CCCons(new CCIS("RAP"), cont)))));
                         }
                     }
                     else if (fn.Name == "quote")    // quote
                     {
                         return new CCCons(new CCIS("LDC"), new CCCons((args as CCCons).car, cont));
                     }
-                    else if(fn.Name == "setf")    // setf
+                    else if(fn.Name == "set")    // setf
                     {
                         var argsc = args as CCCons;
 
@@ -153,7 +152,7 @@ namespace CCLisp.Model
 
                         return Compile1(value, env, new CCCons(new CCIS("ST"), new CCCons(pos, cont)));
                     }
-                    else if(fn.Name == "defmacro")  // defmacro
+                    else if(fn.Name == "defm")  // defmacro
                     {
                         var argsc = args as CCCons;
 
@@ -197,13 +196,13 @@ namespace CCLisp.Model
                         }
                         else // normal application
                         {
-                            return new CCCons(null, CompileApp(args, env, new CCCons(new CCIS("LD"), new CCCons(Index(fcn as CCIdentifier, env), new CCCons(new CCIS("AP"), cont)))));
+                            return new CCCons(null, CompileApp(args as CCCons, env, new CCCons(new CCIS("LD"), new CCCons(Index(fcn as CCIdentifier, env), new CCCons(new CCIS("AP"), cont)))));
                         }
                     }
                 }
                 else // application with nested function
                 {
-                    return new CCCons(null, CompileApp(args, env, Compile1(fcn, env, new CCCons(new CCIS("AP"), cont))));
+                    return new CCCons(null, CompileApp(args as CCCons, env, Compile1(fcn, env, new CCCons(new CCIS("AP"), cont))));
                 }
             }
         }
@@ -236,7 +235,7 @@ namespace CCLisp.Model
                     cont));
         }
 
-        private CCObject CompileApp(CCObject args, CCCons env, CCObject cont)
+        private CCObject CompileApp(CCCons args, CCCons env, CCObject cont)
         {
             if (args == null)
             {
@@ -244,7 +243,7 @@ namespace CCLisp.Model
             }
             else
             {
-                return CompileApp((args as CCCons).cdr, env, Compile1((args as CCCons).car, env, new CCCons(new CCIS("CONS"), cont)));
+                return CompileApp(args.cdr as CCCons, env, Compile1((args as CCCons).car, env, new CCCons(new CCIS("CONS"), cont)));
             }
         }
 
