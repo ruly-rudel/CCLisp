@@ -206,6 +206,24 @@ namespace CCLisp.Model
 
                         return CompileLambda(mbody, new CCCons(margs, env), new CCCons(new CCIS("ST"), new CCCons(pos, cont)));
                     }
+                    else if(fn.Name == "macroexpand-1")
+                    {
+                        var form = (args as CCCons).car as CCCons;
+
+                        var macfn = form.car;
+                        var macarg = form.cdr;
+
+                        if (Index2(macfn as CCIdentifier, mc_symbols, 1) != null)
+                        {   // macro expansion compile
+                            var expand_code = new CCCons(new CCIS("LDC"), new CCCons(macarg, new CCCons(new CCIS("LD"), new CCCons(Index(macfn as CCIdentifier, env), new CCCons(new CCIS("AP"), new CCCons(new CCIS("HALT"), null))))));
+                            vm.Eval(expand_code);
+                            return new CCCons(new CCIS("LDC"), new CCCons(vm.GetResult(), cont));
+                        }
+                        else
+                        {
+                            return null;
+                        }
+                    }
                     else // application or macro
                     {
                         // check if it is macro or not
