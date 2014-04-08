@@ -105,20 +105,30 @@ namespace CCLisp.Model
 
                 if (ts.Current == Atmark)
                 {
-                    throw new NotImplementedException();
+                    if (!ts.MoveNext()) // to body
+                    {
+                        throw new CCParserException();
+                    }
+
+                    return ts.Current;
                 }
                 else
                 {
-                    return ts.Current;
+                    return new CCCons(new CCIdentifier() {Name = "list"}, new CCCons(ts.Current, null));
                 }
             }
             else
             {
-                return QuoteObject(ts.Current);
+                return new CCCons(new CCIdentifier() { Name = "list" }, new CCCons(QuoteObject(ts.Current), null));
             }
         }
 
         private CCObject ParseBackQuotedList(IEnumerator<CCObject> ts)
+        {
+            return new CCCons(new CCIdentifier() { Name = "append" }, ParseBackQuotedListCont(ts));
+        }
+
+        private CCObject ParseBackQuotedListCont(IEnumerator<CCObject> ts)
         {
             if (!ts.MoveNext()) // to car
             {
@@ -131,12 +141,8 @@ namespace CCLisp.Model
                 return null;
             }
 
-            var list3 = new CCCons(null, null);
-            var list2 = new CCCons(ParseBackQuotedBasicForm(ts), list3);
-            var list = new CCCons(new CCIdentifier() { Name = "cons" }, list2);
-            list3.car = ParseBackQuotedList(ts);
-
-            return list;
+            var list = ParseBackQuotedBasicForm(ts);
+            return new CCCons(list, ParseBackQuotedListCont(ts));
         }
 
         //
