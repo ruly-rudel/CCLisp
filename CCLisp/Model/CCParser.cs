@@ -56,7 +56,7 @@ namespace CCLisp.Model
                     throw new CCParserException();
                 }
 
-                return ParseBackQuotedBasicForm(ts);
+                return (ParseBackQuotedBasicForm(ts) as CCCons).cadr;   // ad-hock
             }
             else
             {
@@ -94,7 +94,7 @@ namespace CCLisp.Model
         {
             if (ts.Current == ParenL)
             {
-                return ParseBackQuotedList(ts);
+                return new CCCons(new CCIdentifier() {Name="list"}, new CCCons(ParseBackQuotedList(ts), null));
             }
             else if (ts.Current == Comma)
             {
