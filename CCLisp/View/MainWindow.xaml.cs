@@ -95,6 +95,7 @@ namespace CCLisp.View
             catch (CCException ex)
             {
                 EvalResult.Text += ex.Message;
+                EvalResult.Text += "\nsource: " + ex.Source;
             }
 
         }

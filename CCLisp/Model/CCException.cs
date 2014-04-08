@@ -24,10 +24,18 @@ namespace CCLisp.Model
 
     public class CCCompileIdentifierNotFoundException : CCException
     {
+        public CCCompileIdentifierNotFoundException(string source)
+        {
+            Source = source;
+        }
     }
 
     public class CCCompileInvalidFormalParameterException : CCException
     {
+        public CCCompileInvalidFormalParameterException(string source)
+        {
+            Source = source;
+        }
     }
 
     public class CCParserException : CCException

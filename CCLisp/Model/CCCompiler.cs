@@ -69,7 +69,7 @@ namespace CCLisp.Model
                     var ij = Index(exp as CCIdentifier, env);
                     if (ij == null)
                     {
-                        throw new CCCompileIdentifierNotFoundException();
+                        throw new CCCompileIdentifierNotFoundException(exp.ToString());
                     }
                     else
                     {
@@ -82,7 +82,7 @@ namespace CCLisp.Model
                             }
                             else
                             {
-                                throw new CCCompileInvalidFormalParameterException();
+                                throw new CCCompileInvalidFormalParameterException(ij.caddr.ToString());
                             }
                         }
                         else
@@ -218,7 +218,15 @@ namespace CCLisp.Model
                         }
                         else // normal application
                         {
-                            return new CCCons(null, CompileApp(args as CCCons, env, new CCCons(new CCIS("LD"), new CCCons(Index(fcn as CCIdentifier, env), new CCCons(new CCIS("AP"), cont)))));
+                            var func = Index(fcn as CCIdentifier, env);
+                            if(func == null)
+                            {
+                                throw new CCCompileIdentifierNotFoundException(fcn.ToString());
+                            }
+                            else
+                            {
+                                return new CCCons(null, CompileApp(args as CCCons, env, new CCCons(new CCIS("LD"), new CCCons(func, new CCCons(new CCIS("AP"), cont)))));
+                            }
                         }
                     }
                 }

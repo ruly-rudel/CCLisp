@@ -44,7 +44,7 @@ namespace CCLisp.Model
 
     public class CCVM
     {
-        public static string[] Builtin = {"+", "-", "*", "/", "car", "cdr", "cons", "eq", "<", ">", "<=", ">=", "atom", "list"};
+        public static string[] Builtin = {"+", "-", "*", "/", "car", "cdr", "cons", "eq", "<", ">", "<=", ">=", "atom", "list", "null"};
 
         // evaluation environments
         private CCStack Stack;
@@ -213,7 +213,7 @@ namespace CCLisp.Model
                         return true;
 
                     case "DUM":
-                        Env.Clear();
+                        Env.Push(null);
                         return true;
 
                     case "RAP":
@@ -224,7 +224,7 @@ namespace CCLisp.Model
 
                             var cl = fe.cdr as CCCons;
                             cl.car = v;
-                            var dummy = Env;
+//                            var dummy = Env;
 
                             // dump
                             Dump.Push(Code.Stack);
@@ -234,7 +234,7 @@ namespace CCLisp.Model
                             // apply
                             Stack.Clear();
                             Env.Stack = fe.cdr as CCCons;
-                            Env.Push(v);
+//                            Env.Push(v);
                             Code.Stack = fe.car as CCCons;
                         }
                         return true;
@@ -398,6 +398,21 @@ namespace CCLisp.Model
                             else
                             {
                                 Stack.Push(new CCT());
+                            }
+
+                            return true;
+                        }
+
+                    case "null":
+                        {
+                            var s = Stack.Pop();
+                            if (s == null)
+                            {
+                                Stack.Push(new CCT());
+                            }
+                            else
+                            {
+                                Stack.Push(null);
                             }
 
                             return true;
