@@ -159,6 +159,22 @@ namespace CCLisp.Model
         }
     }
 
+    [Serializable]
+    public class CCString : CCObject
+    {
+        public string value { get; set; }
+
+        public CCString(string s)
+        {
+            value = s;
+        }
+
+        public override string ToString()
+        {
+            return value;
+        }
+    }
+
     public class CCSymbol : CCObject
     {
         public string Name { get; set; }

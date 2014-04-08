@@ -9,7 +9,7 @@ namespace CCLisp.Model
 {
     class CCParser
     {
-        private string SpecialChar = "(),'`@";
+        private string SpecialChar = "(),'`@\"";
 
         private CCParenL ParenL = new CCParenL();
         private CCParenR ParenR = new CCParenR();
@@ -191,6 +191,10 @@ namespace CCLisp.Model
                         {
                             yield return Atmark;
                         }
+                        else if (c == '"')
+                        {
+                            yield return ReadToDoubleQuote(cs);
+                        }
                         else
                         {
                             throw new NotImplementedException();
@@ -198,6 +202,30 @@ namespace CCLisp.Model
                     }
                 }
             }
+        }
+
+        private CCObject ReadToDoubleQuote(TextReader tr)
+        {
+            var sb = new StringBuilder();
+            while (tr.Peek() != -1 && tr.Peek() != '"')
+            {
+                if(tr.Peek() == '\\')
+                {
+                    tr.Read();
+                    if(tr.Peek() == -1)
+                    {
+                        throw new CCParserException();
+                    }
+                }
+                sb.Append((char)tr.Read());
+            }
+
+            if (tr.Read() == -1)
+            {
+                throw new CCParserException();
+            }
+
+            return new CCString(sb.ToString());
         }
 
 

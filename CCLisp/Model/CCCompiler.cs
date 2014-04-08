@@ -58,9 +58,9 @@ namespace CCLisp.Model
             {
                 return new CCCons(null, cont);
             }
-            else if (exp.GetType() != typeof(CCCons)) // number or identifier
+            else if (exp.GetType() != typeof(CCCons)) // number, string or identifier
             {
-                if (exp.GetType() == typeof(CCInt))
+                if (exp.GetType() == typeof(CCInt) || exp.GetType() == typeof(CCString))
                 {
                     return new CCCons(new CCIS("LDC"), new CCCons(exp, cont));
                 }
