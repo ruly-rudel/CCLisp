@@ -44,7 +44,7 @@ namespace CCLisp.Model
 
     public class CCVM
     {
-        public static string[] Builtin = {"+", "-", "*", "/", "car", "cdr", "cons", "eq", "<", ">", "<=", ">=", "atom"};
+        public static string[] Builtin = {"+", "-", "*", "/", "car", "cdr", "cons", "eq", "<", ">", "<=", ">=", "atom", "list"};
 
         // evaluation environments
         private CCStack Stack;
@@ -402,8 +402,6 @@ namespace CCLisp.Model
 
                             return true;
                         }
-
-
 
                     default:
                         throw new NotImplementedException();

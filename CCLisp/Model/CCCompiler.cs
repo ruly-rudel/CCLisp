@@ -103,7 +103,14 @@ namespace CCLisp.Model
                     var name = from x in CCVM.Builtin where x == fn.Name select x;
                     if (name.Count() == 1)  // builtin
                     {
-                        return CompileBuiltin(args, env, new CCCons(fcn, cont));
+                        if (name.First() == "list")
+                        {
+                            return new CCCons(null, CompileList(args, env, cont));
+                        }
+                        else
+                        {
+                            return CompileBuiltin(args, env, new CCCons(fcn, cont));
+                        }
                     }
                     else if (fn.Name == "fn") // lambda special form
                     {
@@ -231,6 +238,18 @@ namespace CCLisp.Model
             else
             {
                 return CompileBuiltin((args as CCCons).cdr, env, Compile1((args as CCCons).car, env, cont));
+            }
+        }
+
+        private CCObject CompileList(CCObject args, CCCons env, CCObject cont)
+        {
+            if (args == null)
+            {
+                return cont;
+            }
+            else
+            {
+                return CompileList((args as CCCons).cdr, env, Compile1((args as CCCons).car, env, new CCCons(new CCIS("CONS"), cont)));
             }
         }
 
