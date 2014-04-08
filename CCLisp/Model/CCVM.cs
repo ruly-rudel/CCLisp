@@ -302,14 +302,14 @@ namespace CCLisp.Model
                     case "car":
                         {
                             var cons = Stack.Pop() as CCCons;
-                            Stack.Push(cons.car);
+                            Stack.Push(cons == null ? null : cons.car);
                         }
                         return true;
 
                     case "cdr":
                         {
                             var cons = Stack.Pop() as CCCons;
-                            Stack.Push(cons.cdr);
+                            Stack.Push(cons == null ? null : cons.cdr);
                         }
                         return true;
 
